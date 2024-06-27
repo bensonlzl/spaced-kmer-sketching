@@ -1,0 +1,5 @@
+# .fna files
+*.fna
+
+# debug files
+debug*
