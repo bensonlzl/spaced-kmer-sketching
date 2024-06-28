@@ -76,6 +76,7 @@ kmer_bitset reverse_kmer_bitset(kmer_bitset kbs){
 
     if (DEBUG) std::cout << "cur    = " << cur << std::endl;
     // log KMER_BITSET_SIZE iterations of reversing in blocks of powers of 2
+    
     for (int gap_size = NUCLEOTIDE_BIT_SIZE; gap_size < KMER_BITSET_SIZE; gap_size *= 2, ++array_idx){
         if (DEBUG) std::cout << "f half = " << (cur & reversing_kmer_array[array_idx]) << std::endl;
         if (DEBUG) std::cout << "s half = " << (cur & invert_reversing_kmer_array[array_idx]) << std::endl;

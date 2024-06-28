@@ -10,7 +10,9 @@
 #include <iostream>
 #include <fstream>
 #include <ranges>
+#include <functional>
 #include <boost/dynamic_bitset.hpp>
+#include <boost/functional/hash.hpp>
 
 // #include "xxhash.hpp"
 // #include <ext/pb_ds/assoc_container.h>
@@ -19,7 +21,7 @@ typedef boost::dynamic_bitset<> kmer_bitset;
 
 // ONLY MODIFY THIS
 // const int LOG_KMER_UINT32_SIZE = 2;
-const int LOG_KMER_BITSET_SIZE = 8;
+const int LOG_KMER_BITSET_SIZE = 6;
 
 // DO NOT MODIFY THESE
 const int NUCLEOTIDE_BIT_SIZE = 2;
@@ -65,6 +67,19 @@ struct kmer_hash {
             kmer_bitset_std_hash(k.masked_bits) ^
             kmer_bitset_std_hash(k.mask) ^
             int_std_hash(k.window_length)
+        );
+        return k_hash;
+    }
+};
+
+struct frac_min_hash {
+    boost::hash<kmer_bitset> kmer_bitset_boost_hash;
+    boost::hash<int> int_boost_hash;
+    inline uint64_t operator()(const kmer &k) const {
+        uint64_t k_hash = (
+            kmer_bitset_boost_hash(k.masked_bits) ^
+            kmer_bitset_boost_hash(k.mask) ^
+            int_boost_hash(k.window_length)
         );
         return k_hash;
     }

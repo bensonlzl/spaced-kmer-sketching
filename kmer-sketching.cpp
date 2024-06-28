@@ -1,5 +1,5 @@
 #include "kmer.hpp"
-
+#include <chrono>
 
 /*
 This implementation supports kmers of length up to 128 as the bitsets used will have length 256
@@ -9,33 +9,8 @@ Support for spaced seeds is done using a mask of the same size.
 */
 
 
-
-// inline std::basic_string<char32_t> kmer_bitset_to_basic_string(const kmer_bitset &kb){
-//     std::basic_string<char32_t> return_ints;
-//     for (int num_shifts = 0; num_shifts < KMER_UINT32_SIZE; ++num_shifts){
-//         return_ints.push_back(
-//             (
-//                 contiguous_kmer(32 / NUCLEOTIDE_BIT_SIZE) 
-//                 & ((kb & contiguous_kmer((num_shifts+1) * 32 / NUCLEOTIDE_BIT_SIZE))  >> (num_shifts * 32))
-//             ).to_ulong()
-//         );
-//     }
-//     return return_ints;
-// }
-
-// bool kmer_bits_lexi_smaller(const kmer_bitset &kb1, const kmer_bitset &kb2){
-//     std::basic_string<char32_t> kb_string_1 = kmer_bitset_to_basic_string(kb1);
-//     std::basic_string<char32_t> kb_string_2 = kmer_bitset_to_basic_string(kb2);
-//     for (int num_shifts = 0; num_shifts < KMER_UINT32_SIZE; ++num_shifts){
-//         if (kb_string_1[KMER_UINT32_SIZE - num_shifts - 1] < kb_string_2[KMER_UINT32_SIZE - num_shifts - 1]) return true;
-//         if (kb_string_1[KMER_UINT32_SIZE - num_shifts - 1] > kb_string_2[KMER_UINT32_SIZE - num_shifts - 1]) return false;
-//     }
-//     return false;
-// }
-
-
 // Helper function to print a list of strings
-void print_strings(const std::vector<std::string> string_list){
+void print_strings(const std::vector<std::string> &string_list){
     for (std::string s : string_list){
         std::cout << s << std::endl;
     }
@@ -81,6 +56,14 @@ inline uint8_t nucleotide_to_bits(const char nucleotide){
             break;
     }
     return ret_val;
+}
+
+// Sketching function
+frac_min_hash fmh;
+
+inline bool sketching_condition(const kmer test_kmer){
+    const int c = 200;
+    return (fmh(test_kmer) % c == 0);
 }
 
 // Inlined function to return the associated kmer_bitset
@@ -131,38 +114,38 @@ std::vector<std::string> strings_from_fasta(const char fasta_filename[]){
 
 
 // Helper function to add nucleotide strings
-void add_nucleotide_strings(std::vector<std::string> &return_strings, const std::string &raw_string){
-    std::string cur_string;
+void add_nucleotide_strings(std::vector<std::vector<uint8_t>> &return_strings, const std::string &raw_string){
+    std::vector<uint8_t> cur_nucleotides;
     int raw_string_length = raw_string.length();
     for (int idx = 0; idx < raw_string_length; ++idx){
-        if (nucleotide_to_bits(raw_string[idx]) & 0x4){
-            if (!cur_string.empty()){
-                return_strings.push_back(cur_string);
+        uint8_t nucleotide_bits = nucleotide_to_bits(raw_string[idx]);
+        if (nucleotide_bits & 0x4){
+            if (!cur_nucleotides.empty()){
+                return_strings.push_back(cur_nucleotides);
             }
-            cur_string.clear();
+            cur_nucleotides.clear();
         }
         else{
-            cur_string.push_back(raw_string[idx]);
+            cur_nucleotides.push_back(nucleotide_bits);
         }
     }
-    if (!cur_string.empty()){
-        return_strings.push_back(cur_string);
+    if (!cur_nucleotides.empty()){
+        return_strings.push_back(cur_nucleotides);
     }
 }
 
 // Function to split the strings at non-nucleotide characters
-std::vector<std::string> cut_nucleotide_strings(const std::vector<std::string> &raw_strings){
-    std::vector<std::string> return_strings;
-    for (std::string raw_string : raw_strings){
+std::vector<std::vector<uint8_t>> cut_nucleotide_strings(const std::vector<std::string> &raw_strings){
+    std::vector<std::vector<uint8_t>> return_strings;
+    for (std::string const &raw_string : raw_strings){
         add_nucleotide_strings(return_strings,raw_string);
     }
     return return_strings;
 }
 
 // Helper function to update the kmer window
-inline void update_kmer_window(kmer_bitset &current_kmer_window, const char &nucleotide, const int &window_length){
+inline void update_kmer_window(kmer_bitset &current_kmer_window, const uint8_t &nucleotide_bits, const int &window_length){
     current_kmer_window <<= NUCLEOTIDE_BIT_SIZE;
-    uint8_t nucleotide_bits = nucleotide_to_bits(nucleotide);
     // current_kmer_window |= nucleotide_to_btiset(nucleotide);
     current_kmer_window[0] = (nucleotide_bits & 0x1);
     current_kmer_window[1] = ((nucleotide_bits & 0x2) >> 1);
@@ -171,11 +154,16 @@ inline void update_kmer_window(kmer_bitset &current_kmer_window, const char &nuc
 
 // Function to convert a string it into a list of kmers
 // Assumes that the nucleotide string only contains acgt/ACGT
-std::vector<kmer> nucleotide_string_to_kmers(const std::string &nucleotide_string, const kmer_bitset mask, const int window_length){
+std::vector<kmer> nucleotide_string_to_kmers(
+    const std::vector<uint8_t> &nucleotide_string, 
+    const kmer_bitset mask, 
+    const int window_length,
+    std::function<bool(const kmer)> sketching_cond
+){
     std::vector<kmer> kmer_list;
 
     // If the string length is too short, no kmers in this string
-    int nucleotide_string_length = nucleotide_string.length();
+    int nucleotide_string_length = nucleotide_string.size();
     if (nucleotide_string_length < window_length){
         return kmer_list;
     }
@@ -200,71 +188,75 @@ std::vector<kmer> nucleotide_string_to_kmers(const std::string &nucleotide_strin
             mask,
             current_kmer_window & mask,
         };
-        kmer_list.push_back(canonical_kmer(constructed_kmer));
+        kmer canon_kmer = canonical_kmer(constructed_kmer);
+        if (sketching_cond(canon_kmer)) kmer_list.push_back(canon_kmer);
     }
     
     return kmer_list;
 }
 
 
-std::vector<kmer> nucleotide_string_list_to_kmers(const std::vector<std::string> nucleotide_strings, const kmer_bitset mask, const int window_length){
+std::vector<kmer> nucleotide_string_list_to_kmers(
+    const std::vector<std::vector<uint8_t>> nucleotide_strings, 
+    const kmer_bitset mask, 
+    const int window_length,
+    std::function<bool(const kmer)> sketching_cond
+){
     std::vector<kmer> return_kmers;
-    for (std::string s : nucleotide_strings){
-        std::vector<kmer> constructed_kmers = nucleotide_string_to_kmers(s,mask,window_length);
+    for (std::vector<uint8_t> const &s : nucleotide_strings){
+        std::vector<kmer> constructed_kmers = nucleotide_string_to_kmers(s,mask,window_length,sketching_cond);
         return_kmers.insert(return_kmers.end(),constructed_kmers.begin(),constructed_kmers.end());
     }
     return return_kmers;
 }
 
-// Sketching function
-bool sketching_condition(const kmer test_kmer){
-    return true; // TO DO
-}
 
-// Given a sketching function and list of kmers, 
-// reduce the list of kmers down to a smaller list using the sketching condition
-std::vector<kmer> sketch_filter(const std::vector<kmer> kmers, std::function<bool(const kmer)> sketching_cond){
-    auto filtered_kmers = std::ranges::views::filter(kmers, sketching_cond);
-    std::vector<kmer> return_kmers;
-    for (kmer filtered_kmer : filtered_kmers){
-        return_kmers.push_back(filtered_kmer);
-    }
-    return return_kmers;
+kmer_set kmer_set_from_file(const char filename[], const kmer_bitset mask, const int window_size, std::function<bool(const kmer)> sketching_cond){
+    return kmer_set(
+        nucleotide_string_list_to_kmers(
+            cut_nucleotide_strings(strings_from_fasta(filename)),
+            mask,
+            window_size,
+            sketching_cond
+        )
+    );
 }
 
 
 int main(int argc, char *argv[]){
+    auto t0 = std::chrono::high_resolution_clock::now();
 
-    if (LOGGING) std::clog << INFO_LOG << " kmer size = " << sizeof(kmer) << std::endl;
     initialise_contiguous_kmer_array();
     initialise_reversing_kmer_array();
 
-    
+    auto t1 = std::chrono::high_resolution_clock::now();
 
-    const int kmer_size = 60;
+    const int kmer_size = 20;
     kmer_bitset mask = contiguous_kmer(kmer_size);
 
-    kmer_set kmer_set_1 = kmer_set(
-        sketch_filter(
-            nucleotide_string_list_to_kmers(
-                cut_nucleotide_strings(strings_from_fasta(argv[1])),
-                mask,
-                kmer_size
-            ),
-            sketching_condition
-        )
-    );
-    kmer_set kmer_set_2 = kmer_set(
-        sketch_filter(
-            nucleotide_string_list_to_kmers(
-                cut_nucleotide_strings(strings_from_fasta(argv[2])),
-                mask,
-                kmer_size
-            ),
-            sketching_condition
-        )
-    );
-    if (LOGGING) std::clog << "Comparing ks1 and ks2" << std::endl;
-    std::cout << kmer_set_intersection(kmer_set_1,kmer_set_2) << std::endl;
-    std::cout << kmer_set_1.kmer_set_size() << std::endl;
+    if (LOGGING) std::clog << INFO_LOG << " kmer size = " << kmer_size << std::endl;
+    if (LOGGING) std::clog << INFO_LOG << " kmer mask = " << mask << std::endl;
+
+    std::vector<kmer_set> kmer_set_data;
+    for (int i = 1; i < argc; ++i){
+        kmer_set_data.push_back(
+            kmer_set_from_file(argv[i],mask,kmer_size,sketching_condition)
+        );
+    }
+    
+    auto t2 = std::chrono::high_resolution_clock::now();
+
+    int data_size = kmer_set_data.size();
+    for (int i = 0; i < data_size; ++i){
+        std::cout << "Comparing files " << i << " and " << i+1 << std::endl;
+        std::cout << kmer_set_intersection(kmer_set_data[i],kmer_set_data[(i+1)%data_size]) << std::endl;
+    }
+    
+    auto t3 = std::chrono::high_resolution_clock::now();
+
+    std::cout << "Time taken for initialisation = " << std::chrono::duration<double,std::milli>(t1-t0).count() << " ms" << std::endl;
+    std::cout << "Time taken for sketching = " << std::chrono::duration<double,std::milli>(t2-t1).count() << " ms" << std::endl;
+    std::cout << "Time taken for set comparison = " << std::chrono::duration<double,std::milli>(t3-t2).count() << " ms" << std::endl;
+
+
 }
