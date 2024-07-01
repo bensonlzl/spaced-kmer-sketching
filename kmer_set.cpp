@@ -13,6 +13,3 @@ int kmer_set_intersection(const kmer_set &ks1, const kmer_set &ks2) {
     return inters;
 }
 
-double kmer_set_containment(const kmer_set &ks1, const kmer_set &ks2) {
-    return ((double) kmer_set_intersection(ks1,ks2)) / ((double) ks1.kmer_set_size());
-}

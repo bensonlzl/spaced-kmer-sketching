@@ -89,22 +89,3 @@ kmer_bitset reverse_kmer_bitset(kmer_bitset kbs){
     }
     return cur;
 }
-
-// Function to convert a kmer_bitset to a basic_string<char32_t>
-// Packs the bits directly into the basic string, 
-// so the number of bits in each is the same
-// std::basic_string<char32_t> kmer_bitset_to_basic_string(const kmer_bitset &kbs){
-//     std::basic_string<char32_t> ret_bs;
-//     // TO DO
-//     return ret_bs;
-// }
-
-// Function to determine which of two kmer_bitset is lexicographically smaller
-// bool kmer_bitset_lexi_smaller(const kmer_bitset &kb1, const kmer_bitset &kb2){
-//     // TO DO
-//     return false;
-// }
-
-// inline void mask_kmer_bitset(kmer_bitset &kbs, const kmer_bitset &mask){
-//     kbs &= mask;
-// }

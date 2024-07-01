@@ -14,6 +14,9 @@
 #include <boost/dynamic_bitset.hpp>
 #include <boost/functional/hash.hpp>
 
+#include "logging.hpp"
+
+
 // #include "xxhash.hpp"
 // #include <ext/pb_ds/assoc_container.h>
 
@@ -21,7 +24,8 @@ typedef boost::dynamic_bitset<> kmer_bitset;
 
 // ONLY MODIFY THIS
 // const int LOG_KMER_UINT32_SIZE = 2;
-const int LOG_KMER_BITSET_SIZE = 6;
+const int LOG_KMER_BITSET_SIZE = 6; // Make this as small as is necessary, increasing it makes the program slower
+// Setting it to 6 gives 64-bit bitsets -> 32-mers, 7 -> 64-mers, 8 -> 128-mers, 9 -> 256-mers, 10 -> 512-mers
 
 // DO NOT MODIFY THESE
 const int NUCLEOTIDE_BIT_SIZE = 2;
@@ -33,9 +37,7 @@ const int NUCLEOTIDE_BIT_SIZE = 2;
 const int KMER_BITSET_SIZE = (1 << LOG_KMER_BITSET_SIZE) ;
 const int MAX_KMER_LENGTH = (KMER_BITSET_SIZE / NUCLEOTIDE_BIT_SIZE);
 
-const std::string INFO_LOG = "[INFO] ";
-const int LOGGING = 1;
-const int DEBUG = 0;
+
 
 void initialise_contiguous_kmer_array();
 kmer_bitset contiguous_kmer(const int kmer_length);
@@ -91,7 +93,7 @@ typedef std::unordered_map<kmer,int,kmer_hash> kmer_hash_table;
 struct kmer_set{
     kmer_hash_table kmer_hashes;
 
-    kmer_set(const std::vector<kmer> kmers) {
+    void insert_kmers(const std::vector<kmer> &kmers){
         if (DEBUG) std::cout << "INSERTION BEGIN"  << '\n';
         for (kmer k : kmers){
             if (DEBUG) std::cout << "INSERTING KMER " << k.masked_bits << '\n';
@@ -105,4 +107,3 @@ struct kmer_set{
     }
 };
 int kmer_set_intersection(const kmer_set &ks1, const kmer_set &ks2);
-double kmer_set_containment(const kmer_set &ks1, const kmer_set &ks2);
