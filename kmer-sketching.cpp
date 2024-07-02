@@ -2,6 +2,7 @@
 #include "ani_estimator.hpp"
 #include "fasta_processing.hpp"
 #include <chrono>
+#include <cilk/cilk.h>
 
 // Helper function to print a list of strings
 void print_strings(const std::vector<std::string> &string_list){
@@ -121,7 +122,7 @@ int main(int argc, char *argv[]){
     std::cout << "Time taken for string processing = " << std::chrono::duration<double,std::milli>(t_postprocess_string-t_preprocess_string).count() << " ms" << std::endl;
     auto t_preprocess_kmers = std::chrono::high_resolution_clock::now();
     
-    for (int i = 1; i < argc; ++i){
+    cilk_for (int i = 1; i < argc; ++i){
         nucleotide_string_list_to_kmers_by_reference(
             kmer_lists[i-1],
             data_strings[i-1],

@@ -1,7 +1,24 @@
+/*
+This file contains a number of functions related to processing the  .fasta files used to store the genomic data
+*/
+
 #include "fasta_processing.hpp"
 #include "logging.hpp"
 
-// Inlined function to convert nucleotide letters to 2-bit words
+
+/*
+Inlined function to convert nucleotide letters to 2-bit words
+- A -> 0
+- C -> 1
+- G -> 2
+- T -> 3
+- Anything else -> 4
+
+The above values are chosen so that 
+1) Complementation can be done with a single flip operation
+2) Lexicographical ordering is the same as if we used the original ACGT
+3) We can detect non-ACGT by checking the 3rd lowest bit
+*/
 inline uint8_t nucleotide_to_bits(const char nucleotide){
     uint8_t ret_val = 0;
     switch (nucleotide){
@@ -40,12 +57,17 @@ inline uint8_t nucleotide_to_bits(const char nucleotide){
 // Function to read the input file and convert it into a list of strings
 // Referenced from https://rosettacode.org/wiki/FASTA_format#C++
 std::vector<std::string> strings_from_fasta(const char fasta_filename[]){
+
+    // Create the input file stream
     std::ifstream fasta_file(fasta_filename);
+
+    // If unable to open the file, print and error and exit
     if (!fasta_file.good()){
         std::cerr << "Unable to open " << fasta_filename << ". \n Exiting..." << std::endl;
         exit(1);
     }
 
+    // Vector of strings to be returned
     std::vector<std::string> return_strings;
 
     std::string line, name, content;
@@ -79,22 +101,41 @@ std::vector<std::string> strings_from_fasta(const char fasta_filename[]){
 }
 
 
-// Helper function to add nucleotide strings
-void add_nucleotide_strings(std::vector<std::vector<uint8_t>> &return_strings, const std::string &raw_string){
+/*
+Helper function to add nucleotide strings
+
+Here we represent vector<uint8_t> as the ACGT string
+
+Takes in a reference to a vector of ACGT strings and the current string to be processed
+Mutates the vector of ACGT strings by appending new ACGT strings
+*/
+void add_nucleotide_strings(
+    std::vector<std::vector<uint8_t>> &return_strings, 
+    const std::string &raw_string
+){
+    // ACGT string storing the current nucleotides
     std::vector<uint8_t> cur_nucleotides;
+    
+    // Get the raw string length
     int raw_string_length = raw_string.length();
+
+    // For each index of the raw string, we convert that
     for (int idx = 0; idx < raw_string_length; ++idx){
         uint8_t nucleotide_bits = nucleotide_to_bits(raw_string[idx]);
+
+        // If the nucleotide character is not ACGT, cut the ACGT string here
         if (nucleotide_bits & 0x4){
             if (!cur_nucleotides.empty()){
                 return_strings.push_back(cur_nucleotides);
             }
             cur_nucleotides.clear();
         }
+        // Otherwise append the new nucleotide to the current vector
         else{
             cur_nucleotides.push_back(nucleotide_bits);
         }
     }
+    // If there is still an ACGT string left, add this string as well
     if (!cur_nucleotides.empty()){
         return_strings.push_back(cur_nucleotides);
     }
