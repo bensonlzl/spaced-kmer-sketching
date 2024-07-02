@@ -23,6 +23,8 @@
 // We will be using the boost dynamic bitsets for representing the kmers
 typedef boost::dynamic_bitset<> kmer_bitset;
 
+
+
 // ONLY MODIFY THIS
 // const int LOG_KMER_UINT32_SIZE = 2;
 const int LOG_KMER_BITSET_SIZE = 6; // Make this as small as is necessary, increasing it makes the program slower
@@ -37,7 +39,7 @@ const int MAX_KMER_LENGTH = (KMER_BITSET_SIZE / NUCLEOTIDE_BIT_SIZE);
 void initialise_contiguous_kmer_array();
 kmer_bitset contiguous_kmer(const int kmer_length);
 void initialise_reversing_kmer_array();
-kmer_bitset reverse_kmer_bitset(kmer_bitset kbs);
+kmer_bitset reverse_kmer_bitset(const kmer_bitset &kbs);
 
 // Struct to store information about the kmer 
 struct kmer{
@@ -133,6 +135,13 @@ int kmer_set_intersection(const kmer_set &ks1, const kmer_set &ks2);
 // Helper functions to compute kmer sets from fasta files
 kmer_set kmer_set_from_fasta_file(
     const char fasta_filename[],
+    const kmer_bitset &mask,
+    const int kmer_size,
+    const std::function<bool(const kmer)> &sketching_cond
+);
+std::vector<kmer_set> kmer_sets_from_fasta_files(
+    int num_files,
+    char *fasta_filenames[],
     const kmer_bitset &mask,
     const int kmer_size,
     const std::function<bool(const kmer)> &sketching_cond

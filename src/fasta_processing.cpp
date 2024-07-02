@@ -3,6 +3,7 @@ This file contains a number of functions related to processing the  .fasta files
 */
 
 #include "fasta_processing.hpp"
+
 #include "logging.hpp"
 
 

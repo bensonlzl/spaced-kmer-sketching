@@ -6,8 +6,6 @@ Warning: Lots of bit hacks are used
 */
 
 
-
-
 // For each length 0 <= l <= MAX_KMER_LENGTH, store kmer_bitset with exactly 2l 1s
 kmer_bitset contiguous_kmer_array[MAX_KMER_LENGTH+1]; 
 
@@ -69,7 +67,7 @@ void initialise_reversing_kmer_array(){
 }
 
 // Function to reverse a kmer_bitset (used for reverse complementation)
-kmer_bitset reverse_kmer_bitset(kmer_bitset kbs){
+kmer_bitset reverse_kmer_bitset(const kmer_bitset &kbs){
     int array_idx = 0;
     kmer_bitset cur = kbs;
     if (DEBUG) std::cout << "kbs    = " << kbs << std::endl;
