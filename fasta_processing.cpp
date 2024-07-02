@@ -6,6 +6,7 @@ This file contains a number of functions related to processing the  .fasta files
 #include "logging.hpp"
 
 
+
 /*
 Inlined function to convert nucleotide letters to 2-bit words
 - A -> 0
@@ -110,11 +111,11 @@ Takes in a reference to a vector of ACGT strings and the current string to be pr
 Mutates the vector of ACGT strings by appending new ACGT strings
 */
 void add_nucleotide_strings(
-    std::vector<std::vector<uint8_t>> &return_strings, 
+    std::vector<acgt_string> &return_strings, 
     const std::string &raw_string
 ){
     // ACGT string storing the current nucleotides
-    std::vector<uint8_t> cur_nucleotides;
+    acgt_string cur_nucleotides;
     
     // Get the raw string length
     int raw_string_length = raw_string.length();
@@ -143,10 +144,14 @@ void add_nucleotide_strings(
 
 
 // Function to split the strings at non-nucleotide characters
-std::vector<std::vector<uint8_t>> cut_nucleotide_strings(const std::vector<std::string> &raw_strings){
-    std::vector<std::vector<uint8_t>> return_strings;
+std::vector<acgt_string> cut_nucleotide_strings(const std::vector<std::string> &raw_strings){
+    std::vector<acgt_string> return_strings;
     for (std::string const &raw_string : raw_strings){
         add_nucleotide_strings(return_strings,raw_string);
     }
     return return_strings;
+}
+
+std::vector<acgt_string> nucleotide_strings_from_fasta_file(const char fasta_filename[]){
+    return cut_nucleotide_strings(strings_from_fasta(fasta_filename));
 }
