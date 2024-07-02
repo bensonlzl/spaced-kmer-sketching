@@ -39,15 +39,8 @@ int main(int argc, char *argv[]){
 
     auto t_preprocess_string = std::chrono::high_resolution_clock::now();
 
-    for (int i = 1; i < argc; ++i){
-        data_strings[i-1] = cut_nucleotide_strings(strings_from_fasta(argv[i]));
-    }
-
-    auto t_postprocess_string = std::chrono::high_resolution_clock::now();
-    std::cout << "Time taken for string processing = " << std::chrono::duration<double,std::milli>(t_postprocess_string-t_preprocess_string).count() << " ms" << std::endl;
-    auto t_preprocess_kmers = std::chrono::high_resolution_clock::now();
-    
     cilk_for (int i = 1; i < argc; ++i){
+        data_strings[i-1] = cut_nucleotide_strings(strings_from_fasta(argv[i]));
         nucleotide_string_list_to_kmers_by_reference(
             kmer_lists[i-1],
             data_strings[i-1],
@@ -55,21 +48,18 @@ int main(int argc, char *argv[]){
             kmer_size,
             sketching_condition
         );
-    }
-
-    auto t_postprocess_kmers = std::chrono::high_resolution_clock::now();
-    std::cout << "Time taken for sketching = " << std::chrono::duration<double,std::milli>(t_postprocess_kmers-t_preprocess_kmers).count() << " ms" << std::endl;
-    auto t_preinsert_kmers = std::chrono::high_resolution_clock::now();
-
-
-    for (int i = 1; i < argc; ++i){
         kmer_set_data[i-1].insert_kmers(
             kmer_lists[i-1]
         );
     }
 
-    auto t_postinsert_kmers = std::chrono::high_resolution_clock::now();
-    std::cout << "Time taken for insertion = " << std::chrono::duration<double,std::milli>(t_postinsert_kmers-t_preinsert_kmers).count() << " ms" << std::endl;
+    auto t_postprocess_kmers = std::chrono::high_resolution_clock::now();
+    std::cout << "Time taken for sketching = " << std::chrono::duration<double,std::milli>(t_postprocess_kmers-t_preprocess_string).count() << " ms" << std::endl;
+    // auto t_preinsert_kmers = std::chrono::high_resolution_clock::now();
+
+
+    // auto t_postinsert_kmers = std::chrono::high_resolution_clock::now();
+    // std::cout << "Time taken for insertion = " << std::chrono::duration<double,std::milli>(t_postinsert_kmers-t_preinsert_kmers).count() << " ms" << std::endl;
 
     
     auto t2 = std::chrono::high_resolution_clock::now();
