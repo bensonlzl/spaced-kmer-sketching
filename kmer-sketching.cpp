@@ -18,47 +18,25 @@ inline bool sketching_condition(const kmer &test_kmer){
     return (fmh(test_kmer) % c == 0);
 }
 
-
-
-int main(int argc, char *argv[]){
-    auto t0 = std::chrono::high_resolution_clock::now();
-
-    initialise_contiguous_kmer_array();
-    initialise_reversing_kmer_array();
-
-    auto t1 = std::chrono::high_resolution_clock::now();
-
-    const int kmer_size = 20;
+void test_compute_pairwise_ANI_estimation_contiguous_kmers(const int kmer_size, const int num_files, char *filenames[]){
     kmer_bitset mask = contiguous_kmer(kmer_size);
     const int kmer_num_indices = (mask.count() / NUCLEOTIDE_BIT_SIZE);
 
     if (LOGGING) std::clog << INFO_LOG << " kmer size = " << kmer_size << std::endl;
     if (LOGGING) std::clog << INFO_LOG << " kmer mask = " << mask << std::endl;
-
-    std::vector<kmer_set> kmer_set_data(argc-1);
-
+    
+    std::vector<kmer_set> kmer_set_data(num_files);
     auto t_preprocess_string = std::chrono::high_resolution_clock::now();
-
-    cilk_for (int i = 1; i < argc; ++i){
-        kmer_set_data[i-1] = kmer_set_from_fasta_file(
-            argv[i],
+    cilk_for (int i = 0; i < num_files; ++i){
+        kmer_set_data[i] = kmer_set_from_fasta_file(
+            filenames[i],
             mask,
             kmer_size,
             sketching_condition
         );
     }
-
     auto t_postprocess_kmers = std::chrono::high_resolution_clock::now();
     std::cout << "Time taken for sketching = " << std::chrono::duration<double,std::milli>(t_postprocess_kmers-t_preprocess_string).count() << " ms" << std::endl;
-    // auto t_preinsert_kmers = std::chrono::high_resolution_clock::now();
-
-
-    // auto t_postinsert_kmers = std::chrono::high_resolution_clock::now();
-    // std::cout << "Time taken for insertion = " << std::chrono::duration<double,std::milli>(t_postinsert_kmers-t_preinsert_kmers).count() << " ms" << std::endl;
-
-    
-    auto t2 = std::chrono::high_resolution_clock::now();
-
     int data_size = kmer_set_data.size();
     for (int i = 0; i < data_size; ++i){
         std::cout << "Comparing files " << i << " and " << i+1 << std::endl;
@@ -67,12 +45,10 @@ int main(int argc, char *argv[]){
         double ani_estimate = binomial_estimator(contain,kmer_num_indices);
         std::cout << "Intersection = " << intersection << "\nContainment = " << contain << "\nANI Estimate = " << ani_estimate << std::endl;
     }
-    
-    auto t3 = std::chrono::high_resolution_clock::now();
+}
 
-    std::cout << "Total time taken for initialisation = " << std::chrono::duration<double,std::milli>(t1-t0).count() << " ms" << std::endl;
-    std::cout << "Total time taken for string processing and sketching = " << std::chrono::duration<double,std::milli>(t2-t1).count() << " ms" << std::endl;
-    std::cout << "Total time taken for set comparison = " << std::chrono::duration<double,std::milli>(t3-t2).count() << " ms" << std::endl;
-
-
+int main(int argc, char *argv[]){
+    initialise_contiguous_kmer_array();
+    initialise_reversing_kmer_array();
+    test_compute_pairwise_ANI_estimation_contiguous_kmers(20,argc-1,argv+1);
 }
