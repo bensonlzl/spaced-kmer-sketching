@@ -10,3 +10,6 @@ test*
 
 # .txt files
 *.txt
+
+# build files 
+/build/

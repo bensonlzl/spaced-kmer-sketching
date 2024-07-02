@@ -55,73 +55,8 @@ struct kmer{
 kmer reverse_complement(kmer k);
 kmer canonical_kmer(kmer k);
 
-// Struct for computing kmer hashes using std::hash
-struct kmer_hash {
-    std::hash<kmer_bitset> kmer_bitset_std_hash;
-    std::hash<int> int_std_hash;
-    inline uint64_t operator()(const kmer &k) const {
-        uint64_t k_hash = (
-            kmer_bitset_std_hash(k.masked_bits) ^
-            kmer_bitset_std_hash(k.mask) ^
-            int_std_hash(k.window_length)
-        );
-        return k_hash;
-    }
-};
 
-// Struct for FracMinHash, initialised with a nonce to create a different hash
-struct frac_min_hash {
-    boost::hash<kmer_bitset> kmer_bitset_boost_hash;
-    boost::hash<int> int_boost_hash;
-    int nonce;
-
-    frac_min_hash(int n): nonce(int_boost_hash(n)){}
-
-    inline size_t operator()(const kmer &k) const {
-        size_t k_hash = (
-            kmer_bitset_boost_hash(k.masked_bits) 
-            ^ kmer_bitset_boost_hash(k.mask)
-            ^ int_boost_hash(k.window_length) 
-            ^ nonce
-        );
-        return k_hash;
-    }
-};
-
-typedef std::unordered_map<kmer,int,kmer_hash> kmer_hash_table;
-
-// Custom struct to store the kmers
-struct kmer_set{
-    kmer_hash_table kmer_hashes;
-
-    void insert_kmers(const std::vector<kmer> &kmers){
-        if (DEBUG) std::cout << "INSERTION BEGIN"  << '\n';
-        for (kmer k : kmers){
-            if (DEBUG) std::cout << "INSERTING KMER " << k.masked_bits << '\n';
-            kmer_hashes[k] = 1;
-        }
-        if (DEBUG) std::cout << "INSERTION COMPLETED" << '\n';
-    }
-
-    inline int kmer_set_size() const {
-        return kmer_hashes.size();
-    }
-};
-int kmer_set_intersection(const kmer_set &ks1, const kmer_set &ks2);
-kmer_set kmer_set_from_fasta_file(
-    const char fasta_filename[],
-    const kmer_bitset &mask,
-    const int kmer_size,
-    const std::function<bool(const kmer)> &sketching_cond
-);
-std::vector<kmer_set> parallel_kmer_sets_from_fasta_files(
-    int num_files,
-    char *fasta_filenames[],
-    const kmer_bitset &mask,
-    const int kmer_size,
-    const std::function<bool(const kmer)> &sketching_cond
-);
-
+// Helper functions to compute a list of kmers from a list of nucleotide strings
 std::vector<kmer> nucleotide_string_list_to_kmers(
     const std::vector<std::vector<uint8_t>> &nucleotide_strings, 
     const kmer_bitset &mask, 
@@ -135,4 +70,80 @@ void nucleotide_string_list_to_kmers_by_reference(
     const int window_length,
     const std::function<bool(const kmer)> &sketching_cond
 );
+
+
+// Struct for computing kmer hashes using std::hash
+// This is primary used in the hash map to check if an identical kmer exists
+struct kmer_hash {
+    std::hash<kmer_bitset> kmer_bitset_std_hash;
+    std::hash<int> int_std_hash;
+    inline size_t operator()(const kmer &k) const {
+        size_t k_hash = (
+            kmer_bitset_std_hash(k.masked_bits) ^
+            kmer_bitset_std_hash(k.mask) ^
+            int_std_hash(k.window_length)
+        );
+        return k_hash;
+    }
+};
+
+// Struct for FracMinHash, initialised with a nonce to create a different hash
+// This is primarily used in FracMinHash to determine which kmers are kept in the sketching process
+struct frac_min_hash {
+    boost::hash<kmer_bitset> kmer_bitset_boost_hash;
+    boost::hash<int> int_boost_hash;
+    int nonce;
+
+    frac_min_hash(int n): nonce(int_boost_hash(n)){}
+
+    // Hash function
+    inline size_t operator()(const kmer &k) const {
+        size_t k_hash = (
+            kmer_bitset_boost_hash(k.masked_bits) 
+            ^ kmer_bitset_boost_hash(k.mask)
+            ^ int_boost_hash(k.window_length) 
+            ^ nonce
+        );
+        return k_hash;
+    }
+};
+
+// hash table for kmers
+typedef std::unordered_map<kmer,int,kmer_hash> kmer_hash_table;
+
+// Custom struct to store the kmers in a set
+struct kmer_set{
+    kmer_hash_table kmer_hashes;
+
+    // Helper function for inserting kmers
+    void insert_kmers(const std::vector<kmer> &kmers){
+        for (kmer k : kmers){
+            kmer_hashes[k] = 1;
+        }
+    }
+
+    // Helper function for computing the size of the kmer set
+    inline int kmer_set_size() const {
+        return kmer_hashes.size();
+    }
+};
+// Helper function for computing kmer set intersection
+int kmer_set_intersection(const kmer_set &ks1, const kmer_set &ks2);
+
+// Helper functions to compute kmer sets from fasta files
+kmer_set kmer_set_from_fasta_file(
+    const char fasta_filename[],
+    const kmer_bitset &mask,
+    const int kmer_size,
+    const std::function<bool(const kmer)> &sketching_cond
+);
+// This version processes the fasta files in parallel using OpenCilk
+std::vector<kmer_set> parallel_kmer_sets_from_fasta_files(
+    int num_files,
+    char *fasta_filenames[],
+    const kmer_bitset &mask,
+    const int kmer_size,
+    const std::function<bool(const kmer)> &sketching_cond
+);
+
 

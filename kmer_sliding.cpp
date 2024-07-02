@@ -47,8 +47,8 @@ void nucleotide_string_to_kmers(
     }
 }
 
-
-
+// Helper functions to compute the kmers in a list of nucleotide strings
+// This version computes by reference to avoid copying, appends the kmers to a given list of kmers
 void nucleotide_string_list_to_kmers_by_reference(
     std::vector<kmer> &kmer_list,
     const std::vector<std::vector<uint8_t>> &nucleotide_strings, 
@@ -61,6 +61,8 @@ void nucleotide_string_list_to_kmers_by_reference(
     }
 }
 
+// Helper functions to compute the kmers in a list of nucleotide strings
+// This version explicity returns a vector of kmers
 std::vector<kmer> nucleotide_string_list_to_kmers(
     const std::vector<std::vector<uint8_t>> &nucleotide_strings, 
     const kmer_bitset &mask, 
