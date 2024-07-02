@@ -10,7 +10,7 @@ void print_strings(const std::vector<std::string> &string_list){
     }
 }
 
-// Sketching function
+// Sketching function, example
 frac_min_hash fmh(0);
 inline bool sketching_condition(const kmer &test_kmer){
     const int c = 200;
@@ -48,5 +48,5 @@ void test_compute_pairwise_ANI_estimation_contiguous_kmers(const int kmer_size, 
 int main(int argc, char *argv[]){
     initialise_contiguous_kmer_array();
     initialise_reversing_kmer_array();
-    test_compute_pairwise_ANI_estimation_contiguous_kmers(20,argc-1,argv+1);
+    test_compute_pairwise_ANI_estimation_contiguous_kmers(20,argc-1,argv+1); // test on all files given in argv
 }
