@@ -3,3 +3,10 @@
 
 # debug files
 debug*
+*.data*
+
+# .txt files
+*.txt
+
+# .sh files
+*.sh

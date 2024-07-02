@@ -3,13 +3,6 @@
 #include "fasta_processing.hpp"
 #include <chrono>
 
-/*
-This implementation supports kmers of length up to 128 as the bitsets used will have length 256
-
-Support for spaced seeds is done using a mask of the same size. 
-- Default contiguous kmers are implemented by setting the first 2*k bits of the mask to 1 and the rest to 0
-*/
-
 // Helper function to print a list of strings
 void print_strings(const std::vector<std::string> &string_list){
     for (std::string s : string_list){
@@ -19,12 +12,10 @@ void print_strings(const std::vector<std::string> &string_list){
 
 // Sketching function
 frac_min_hash fmh;
-
 inline bool sketching_condition(const kmer &test_kmer){
-    const int c = 2000;
+    const int c = 200;
     return (fmh(test_kmer) % c == 0);
 }
-
 
 
 // Helper function to update the kmer window
@@ -88,16 +79,17 @@ std::vector<kmer> nucleotide_string_list_to_kmers(
     return return_kmers;
 }
 
-// kmer_set kmer_set_from_file(const char filename[], const kmer_bitset mask, const int window_size, std::function<bool(const kmer)> sketching_cond){
-//     return kmer_set(
-//         nucleotide_string_list_to_kmers(
-//             cut_nucleotide_strings(strings_from_fasta(filename)),
-//             mask,
-//             window_size,
-//             sketching_cond
-//         )
-//     );
-// }
+void nucleotide_string_list_to_kmers_by_reference(
+    std::vector<kmer> &kmer_list,
+    const std::vector<std::vector<uint8_t>> &nucleotide_strings, 
+    const kmer_bitset &mask, 
+    const int &window_length,
+    const std::function<bool(const kmer)> &sketching_cond
+){
+    for (std::vector<uint8_t> const &s : nucleotide_strings){
+        nucleotide_string_to_kmers(kmer_list,s,mask,window_length,sketching_cond);
+    }
+}
 
 
 int main(int argc, char *argv[]){
@@ -115,25 +107,44 @@ int main(int argc, char *argv[]){
     if (LOGGING) std::clog << INFO_LOG << " kmer size = " << kmer_size << std::endl;
     if (LOGGING) std::clog << INFO_LOG << " kmer mask = " << mask << std::endl;
 
+    std::vector<std::vector<std::vector<uint8_t>> > data_strings(argc-1);
+    std::vector<std::vector<kmer> > kmer_lists(argc-1);
     std::vector<kmer_set> kmer_set_data(argc-1);
-    for (int i = 1; i < argc; ++i){
-        auto t_preprocess = std::chrono::high_resolution_clock::now();
 
-        auto kmer_list = nucleotide_string_list_to_kmers(
-            cut_nucleotide_strings(strings_from_fasta(argv[i])),
+    auto t_preprocess_string = std::chrono::high_resolution_clock::now();
+
+    for (int i = 1; i < argc; ++i){
+        data_strings[i-1] = cut_nucleotide_strings(strings_from_fasta(argv[i]));
+    }
+
+    auto t_postprocess_string = std::chrono::high_resolution_clock::now();
+    std::cout << "Time taken for string processing = " << std::chrono::duration<double,std::milli>(t_postprocess_string-t_preprocess_string).count() << " ms" << std::endl;
+    auto t_preprocess_kmers = std::chrono::high_resolution_clock::now();
+    
+    for (int i = 1; i < argc; ++i){
+        nucleotide_string_list_to_kmers_by_reference(
+            kmer_lists[i-1],
+            data_strings[i-1],
             mask,
             kmer_size,
             sketching_condition
         );
-        auto t_preinsertion = std::chrono::high_resolution_clock::now();
-
-        kmer_set_data[i-1].insert_kmers(
-            kmer_list
-        );
-        auto t_postinsertion = std::chrono::high_resolution_clock::now();
-        std::cout << "Time taken for string processing and sketching = " << std::chrono::duration<double,std::milli>(t_preinsertion-t_preprocess).count() << " ms" << std::endl;
-        std::cout << "Time taken for hash table insertion = " << std::chrono::duration<double,std::milli>(t_postinsertion-t_preinsertion).count() << " ms" << std::endl;
     }
+
+    auto t_postprocess_kmers = std::chrono::high_resolution_clock::now();
+    std::cout << "Time taken for sketching = " << std::chrono::duration<double,std::milli>(t_postprocess_kmers-t_preprocess_kmers).count() << " ms" << std::endl;
+    auto t_preinsert_kmers = std::chrono::high_resolution_clock::now();
+
+
+    for (int i = 1; i < argc; ++i){
+        kmer_set_data[i-1].insert_kmers(
+            kmer_lists[i-1]
+        );
+    }
+
+    auto t_postinsert_kmers = std::chrono::high_resolution_clock::now();
+    std::cout << "Time taken for insertion = " << std::chrono::duration<double,std::milli>(t_postinsert_kmers-t_preinsert_kmers).count() << " ms" << std::endl;
+
     
     auto t2 = std::chrono::high_resolution_clock::now();
 

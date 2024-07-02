@@ -100,6 +100,7 @@ void add_nucleotide_strings(std::vector<std::vector<uint8_t>> &return_strings, c
     }
 }
 
+
 // Function to split the strings at non-nucleotide characters
 std::vector<std::vector<uint8_t>> cut_nucleotide_strings(const std::vector<std::string> &raw_strings){
     std::vector<std::vector<uint8_t>> return_strings;
