@@ -13,7 +13,7 @@ void nucleotide_string_to_kmers(
     std::vector<kmer> &kmer_list,
     const std::vector<uint8_t> &nucleotide_string, 
     const kmer_bitset &mask, 
-    const int &window_length,
+    const int window_length,
     const std::function<bool(const kmer)> &sketching_cond
 ){
     // If the string length is too short, no kmers in this string
@@ -48,27 +48,32 @@ void nucleotide_string_to_kmers(
 }
 
 
-std::vector<kmer> nucleotide_string_list_to_kmers(
-    const std::vector<std::vector<uint8_t>> &nucleotide_strings, 
-    const kmer_bitset &mask, 
-    const int &window_length,
-    const std::function<bool(const kmer)> &sketching_cond
-){
-    std::vector<kmer> return_kmers;
-    for (std::vector<uint8_t> const &s : nucleotide_strings){
-        nucleotide_string_to_kmers(return_kmers,s,mask,window_length,sketching_cond);
-    }
-    return return_kmers;
-}
 
 void nucleotide_string_list_to_kmers_by_reference(
     std::vector<kmer> &kmer_list,
     const std::vector<std::vector<uint8_t>> &nucleotide_strings, 
     const kmer_bitset &mask, 
-    const int &window_length,
+    const int window_length,
     const std::function<bool(const kmer)> &sketching_cond
 ){
     for (std::vector<uint8_t> const &s : nucleotide_strings){
         nucleotide_string_to_kmers(kmer_list,s,mask,window_length,sketching_cond);
     }
+}
+
+std::vector<kmer> nucleotide_string_list_to_kmers(
+    const std::vector<std::vector<uint8_t>> &nucleotide_strings, 
+    const kmer_bitset &mask, 
+    const int window_length,
+    const std::function<bool(const kmer)> &sketching_cond
+){
+    std::vector<kmer> return_kmers;
+    nucleotide_string_list_to_kmers_by_reference(
+        return_kmers,
+        nucleotide_strings,
+        mask,
+        window_length,
+        sketching_cond
+    );
+    return return_kmers;
 }

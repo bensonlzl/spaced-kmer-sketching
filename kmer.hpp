@@ -108,10 +108,16 @@ struct kmer_set{
 };
 int kmer_set_intersection(const kmer_set &ks1, const kmer_set &ks2);
 
+std::vector<kmer> nucleotide_string_list_to_kmers(
+    const std::vector<std::vector<uint8_t>> &nucleotide_strings, 
+    const kmer_bitset &mask, 
+    const int window_length,
+    const std::function<bool(const kmer)> &sketching_cond
+);
 void nucleotide_string_list_to_kmers_by_reference(
     std::vector<kmer> &kmer_list,
     const std::vector<std::vector<uint8_t>> &nucleotide_strings, 
     const kmer_bitset &mask, 
-    const int &window_length,
+    const int window_length,
     const std::function<bool(const kmer)> &sketching_cond
 );

@@ -18,6 +18,24 @@ inline bool sketching_condition(const kmer &test_kmer){
     return (fmh(test_kmer) % c == 0);
 }
 
+kmer_set kmer_set_from_fasta_file(
+    const char fasta_filename[],
+    const kmer_bitset &mask,
+    const int kmer_size,
+    const std::function<bool(const kmer)> &sketching_cond
+){
+    kmer_set ks;
+    ks.insert_kmers(
+        nucleotide_string_list_to_kmers(
+            cut_nucleotide_strings(strings_from_fasta(fasta_filename)),
+            mask,
+            kmer_size,
+            sketching_condition
+        )
+    );
+    return ks;
+}
+
 int main(int argc, char *argv[]){
     auto t0 = std::chrono::high_resolution_clock::now();
 
