@@ -43,6 +43,9 @@ void test_compute_pairwise_ANI_estimation_contiguous_kmers(const int kmer_size, 
         double ani_estimate = binomial_estimator(contain,kmer_num_indices);
         std::cout << "Intersection = " << intersection << "\nContainment = " << contain << "\nANI Estimate = " << ani_estimate << std::endl;
     }
+    auto t_postcomparison = std::chrono::high_resolution_clock::now();
+    std::cout << "Time taken for comparison = " << std::chrono::duration<double,std::milli>(t_postcomparison-t_postprocess_kmers).count() << " ms" << std::endl;
+
 }
 
 int main(int argc, char *argv[]){
