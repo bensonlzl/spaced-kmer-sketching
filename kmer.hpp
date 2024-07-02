@@ -107,6 +107,12 @@ struct kmer_set{
     }
 };
 int kmer_set_intersection(const kmer_set &ks1, const kmer_set &ks2);
+kmer_set kmer_set_from_fasta_file(
+    const char fasta_filename[],
+    const kmer_bitset &mask,
+    const int kmer_size,
+    const std::function<bool(const kmer)> &sketching_cond
+);
 
 std::vector<kmer> nucleotide_string_list_to_kmers(
     const std::vector<std::vector<uint8_t>> &nucleotide_strings, 

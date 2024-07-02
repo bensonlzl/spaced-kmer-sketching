@@ -18,23 +18,7 @@ inline bool sketching_condition(const kmer &test_kmer){
     return (fmh(test_kmer) % c == 0);
 }
 
-kmer_set kmer_set_from_fasta_file(
-    const char fasta_filename[],
-    const kmer_bitset &mask,
-    const int kmer_size,
-    const std::function<bool(const kmer)> &sketching_cond
-){
-    kmer_set ks;
-    ks.insert_kmers(
-        nucleotide_string_list_to_kmers(
-            cut_nucleotide_strings(strings_from_fasta(fasta_filename)),
-            mask,
-            kmer_size,
-            sketching_condition
-        )
-    );
-    return ks;
-}
+
 
 int main(int argc, char *argv[]){
     auto t0 = std::chrono::high_resolution_clock::now();
@@ -51,23 +35,16 @@ int main(int argc, char *argv[]){
     if (LOGGING) std::clog << INFO_LOG << " kmer size = " << kmer_size << std::endl;
     if (LOGGING) std::clog << INFO_LOG << " kmer mask = " << mask << std::endl;
 
-    std::vector<std::vector<std::vector<uint8_t>> > data_strings(argc-1);
-    std::vector<std::vector<kmer> > kmer_lists(argc-1);
     std::vector<kmer_set> kmer_set_data(argc-1);
 
     auto t_preprocess_string = std::chrono::high_resolution_clock::now();
 
     cilk_for (int i = 1; i < argc; ++i){
-        data_strings[i-1] = cut_nucleotide_strings(strings_from_fasta(argv[i]));
-        nucleotide_string_list_to_kmers_by_reference(
-            kmer_lists[i-1],
-            data_strings[i-1],
+        kmer_set_data[i-1] = kmer_set_from_fasta_file(
+            argv[i],
             mask,
             kmer_size,
             sketching_condition
-        );
-        kmer_set_data[i-1].insert_kmers(
-            kmer_lists[i-1]
         );
     }
 

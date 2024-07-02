@@ -5,8 +5,8 @@
 debug*
 *.data*
 
+# test files
+test*
+
 # .txt files
 *.txt
-
-# .sh files
-*.sh
