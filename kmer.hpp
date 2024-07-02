@@ -14,12 +14,13 @@
 #include <boost/dynamic_bitset.hpp>
 #include <boost/functional/hash.hpp>
 
+// OpenCilk needed for parallel processing of files
+#include <cilk/cilk.h>
+
+
 #include "logging.hpp"
 
-
-// #include "xxhash.hpp"
-// #include <ext/pb_ds/assoc_container.h>
-
+// We will be using the boost dynamic bitsets for representing the kmers
 typedef boost::dynamic_bitset<> kmer_bitset;
 
 // ONLY MODIFY THIS
@@ -29,23 +30,14 @@ const int LOG_KMER_BITSET_SIZE = 6; // Make this as small as is necessary, incre
 
 // DO NOT MODIFY THESE
 const int NUCLEOTIDE_BIT_SIZE = 2;
-// const int KMER_UINT32_SIZE = (1 << LOG_KMER_UINT32_SIZE);
-// const int KMER_BITSET_SIZE = (KMER_UINT32_SIZE * 32) ;
-// const int MAX_KMER_LENGTH = (KMER_BITSET_SIZE / NUCLEOTIDE_BIT_SIZE);
-// const int LOG_KMER_BITSET_SIZE = (LOG_KMER_UINT32_SIZE + 5);
-
 const int KMER_BITSET_SIZE = (1 << LOG_KMER_BITSET_SIZE) ;
 const int MAX_KMER_LENGTH = (KMER_BITSET_SIZE / NUCLEOTIDE_BIT_SIZE);
 
-
-
+// Functions for initialising contiguous kmers and the kmer reversing functions
 void initialise_contiguous_kmer_array();
 kmer_bitset contiguous_kmer(const int kmer_length);
 void initialise_reversing_kmer_array();
 kmer_bitset reverse_kmer_bitset(kmer_bitset kbs);
-// std::basic_string<char32_t> kmer_bitset_to_basic_string(const kmer_bitset &kbs);
-// bool kmer_bitset_lexi_smaller(const kmer_bitset &kb1, const kmer_bitset &kb2);
-// inline void mask_kmer_bitset(kmer_bitset &kbs, const kmer_bitset &mask);
 
 // Struct to store information about the kmer 
 struct kmer{
@@ -58,9 +50,12 @@ struct kmer{
         return (masked_bits == other.masked_bits) && (mask == other.mask);
     }
 };
+
+// Functions for computing canonical kmers
 kmer reverse_complement(kmer k);
 kmer canonical_kmer(kmer k);
 
+// Struct for computing kmer hashes using std::hash
 struct kmer_hash {
     std::hash<kmer_bitset> kmer_bitset_std_hash;
     std::hash<int> int_std_hash;
@@ -74,14 +69,20 @@ struct kmer_hash {
     }
 };
 
+// Struct for FracMinHash, initialised with a nonce to create a different hash
 struct frac_min_hash {
     boost::hash<kmer_bitset> kmer_bitset_boost_hash;
     boost::hash<int> int_boost_hash;
-    inline uint64_t operator()(const kmer &k) const {
-        uint64_t k_hash = (
-            kmer_bitset_boost_hash(k.masked_bits) ^
-            kmer_bitset_boost_hash(k.mask) ^
-            int_boost_hash(k.window_length)
+    int nonce;
+
+    frac_min_hash(int n): nonce(int_boost_hash(n)){}
+
+    inline size_t operator()(const kmer &k) const {
+        size_t k_hash = (
+            kmer_bitset_boost_hash(k.masked_bits) 
+            ^ kmer_bitset_boost_hash(k.mask)
+            ^ int_boost_hash(k.window_length) 
+            ^ nonce
         );
         return k_hash;
     }
@@ -113,6 +114,13 @@ kmer_set kmer_set_from_fasta_file(
     const int kmer_size,
     const std::function<bool(const kmer)> &sketching_cond
 );
+std::vector<kmer_set> parallel_kmer_sets_from_fasta_files(
+    int num_files,
+    char *fasta_filenames[],
+    const kmer_bitset &mask,
+    const int kmer_size,
+    const std::function<bool(const kmer)> &sketching_cond
+);
 
 std::vector<kmer> nucleotide_string_list_to_kmers(
     const std::vector<std::vector<uint8_t>> &nucleotide_strings, 
@@ -127,3 +135,4 @@ void nucleotide_string_list_to_kmers_by_reference(
     const int window_length,
     const std::function<bool(const kmer)> &sketching_cond
 );
+

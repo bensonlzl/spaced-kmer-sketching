@@ -31,3 +31,22 @@ kmer_set kmer_set_from_fasta_file(
     );
     return ks;
 }
+
+std::vector<kmer_set> parallel_kmer_sets_from_fasta_files(
+    int num_files,
+    char *fasta_filenames[],
+    const kmer_bitset &mask,
+    const int kmer_size,
+    const std::function<bool(const kmer)> &sketching_cond
+){
+    std::vector<kmer_set> kmer_sets(num_files);
+    cilk_for (int i = 0; i < num_files; ++i){
+        kmer_sets[i] = kmer_set_from_fasta_file(
+            fasta_filenames[i],
+            mask,
+            kmer_size,
+            sketching_cond
+        );
+    }
+    return kmer_sets;
+}

@@ -2,7 +2,6 @@
 #include "ani_estimator.hpp"
 #include "fasta_processing.hpp"
 #include <chrono>
-#include <cilk/cilk.h>
 
 // Helper function to print a list of strings
 void print_strings(const std::vector<std::string> &string_list){
@@ -12,7 +11,7 @@ void print_strings(const std::vector<std::string> &string_list){
 }
 
 // Sketching function
-frac_min_hash fmh;
+frac_min_hash fmh(0);
 inline bool sketching_condition(const kmer &test_kmer){
     const int c = 200;
     return (fmh(test_kmer) % c == 0);
@@ -25,16 +24,15 @@ void test_compute_pairwise_ANI_estimation_contiguous_kmers(const int kmer_size, 
     if (LOGGING) std::clog << INFO_LOG << " kmer size = " << kmer_size << std::endl;
     if (LOGGING) std::clog << INFO_LOG << " kmer mask = " << mask << std::endl;
     
-    std::vector<kmer_set> kmer_set_data(num_files);
     auto t_preprocess_string = std::chrono::high_resolution_clock::now();
-    cilk_for (int i = 0; i < num_files; ++i){
-        kmer_set_data[i] = kmer_set_from_fasta_file(
-            filenames[i],
-            mask,
-            kmer_size,
-            sketching_condition
-        );
-    }
+
+    std::vector<kmer_set> kmer_set_data = parallel_kmer_sets_from_fasta_files(
+        num_files,
+        filenames,
+        mask,
+        kmer_size,
+        sketching_condition
+    );
     auto t_postprocess_kmers = std::chrono::high_resolution_clock::now();
     std::cout << "Time taken for sketching = " << std::chrono::duration<double,std::milli>(t_postprocess_kmers-t_preprocess_string).count() << " ms" << std::endl;
     int data_size = kmer_set_data.size();
