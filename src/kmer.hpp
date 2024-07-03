@@ -17,13 +17,10 @@
 // OpenCilk needed for parallel processing of files
 #include <cilk/cilk.h>
 
-
 #include "logging.hpp"
 
 // We will be using the boost dynamic bitsets for representing the kmers
 typedef boost::dynamic_bitset<> kmer_bitset;
-
-
 
 // ONLY MODIFY THIS
 // const int LOG_KMER_UINT32_SIZE = 2;
@@ -32,7 +29,7 @@ const int LOG_KMER_BITSET_SIZE = 6; // Make this as small as is necessary, incre
 
 // DO NOT MODIFY THESE
 const int NUCLEOTIDE_BIT_SIZE = 2;
-const int KMER_BITSET_SIZE = (1 << LOG_KMER_BITSET_SIZE) ;
+const int KMER_BITSET_SIZE = (1 << LOG_KMER_BITSET_SIZE);
 const int MAX_KMER_LENGTH = (KMER_BITSET_SIZE / NUCLEOTIDE_BIT_SIZE);
 
 // Functions for initialising contiguous kmers and the kmer reversing functions
@@ -41,14 +38,16 @@ kmer_bitset contiguous_kmer(const int kmer_length);
 void initialise_reversing_kmer_array();
 kmer_bitset reverse_kmer_bitset(const kmer_bitset &kbs);
 
-// Struct to store information about the kmer 
-struct kmer{
-    int window_length;          // Length of the whole kmer_window
-    kmer_bitset kmer_bits;          // Raw bits in the kmer
-    kmer_bitset mask;               // Mask used for the kmer
-    kmer_bitset masked_bits;        // Masked bits of the kmer
+// Struct to store information about the kmer
+struct kmer
+{
+    int window_length;       // Length of the whole kmer_window
+    kmer_bitset kmer_bits;   // Raw bits in the kmer
+    kmer_bitset mask;        // Mask used for the kmer
+    kmer_bitset masked_bits; // Masked bits of the kmer
 
-    bool operator==(const kmer &other)const{
+    bool operator==(const kmer &other) const
+    {
         return (masked_bits == other.masked_bits) && (mask == other.mask);
     }
 };
@@ -57,75 +56,72 @@ struct kmer{
 kmer reverse_complement(kmer k);
 kmer canonical_kmer(kmer k);
 
-
 // Helper functions to compute a list of kmers from a list of nucleotide strings
 std::vector<kmer> nucleotide_string_list_to_kmers(
-    const std::vector<std::vector<uint8_t>> &nucleotide_strings, 
-    const kmer_bitset &mask, 
+    const std::vector<std::vector<uint8_t>> &nucleotide_strings,
+    const kmer_bitset &mask,
     const int window_length,
-    const std::function<bool(const kmer)> &sketching_cond
-);
+    const std::function<bool(const kmer)> &sketching_cond);
 void nucleotide_string_list_to_kmers_by_reference(
     std::vector<kmer> &kmer_list,
-    const std::vector<std::vector<uint8_t>> &nucleotide_strings, 
-    const kmer_bitset &mask, 
+    const std::vector<std::vector<uint8_t>> &nucleotide_strings,
+    const kmer_bitset &mask,
     const int window_length,
-    const std::function<bool(const kmer)> &sketching_cond
-);
-
+    const std::function<bool(const kmer)> &sketching_cond);
 
 // Struct for computing kmer hashes using std::hash
 // This is primary used in the hash map to check if an identical kmer exists
-struct kmer_hash {
+struct kmer_hash
+{
     std::hash<kmer_bitset> kmer_bitset_std_hash;
     std::hash<int> int_std_hash;
-    inline size_t operator()(const kmer &k) const {
-        size_t k_hash = (
-            kmer_bitset_std_hash(k.masked_bits) ^
-            kmer_bitset_std_hash(k.mask) ^
-            int_std_hash(k.window_length)
-        );
+    inline size_t operator()(const kmer &k) const
+    {
+        size_t k_hash = (kmer_bitset_std_hash(k.masked_bits) ^
+                         kmer_bitset_std_hash(k.mask) ^
+                         int_std_hash(k.window_length));
         return k_hash;
     }
 };
 
 // Struct for FracMinHash, initialised with a nonce to create a different hash
 // This is primarily used in FracMinHash to determine which kmers are kept in the sketching process
-struct frac_min_hash {
+struct frac_min_hash
+{
     boost::hash<kmer_bitset> kmer_bitset_boost_hash;
     boost::hash<int> int_boost_hash;
     int nonce;
 
-    frac_min_hash(int n): nonce(int_boost_hash(n)){}
+    frac_min_hash(int n) : nonce(int_boost_hash(n)) {}
 
     // Hash function
-    inline size_t operator()(const kmer &k) const {
-        size_t k_hash = (
-            kmer_bitset_boost_hash(k.masked_bits) 
-            ^ kmer_bitset_boost_hash(k.mask)
-            ^ int_boost_hash(k.window_length) 
-            ^ nonce
-        );
+    inline size_t operator()(const kmer &k) const
+    {
+        size_t k_hash = (kmer_bitset_boost_hash(k.masked_bits) ^ kmer_bitset_boost_hash(k.mask) ^ int_boost_hash(k.window_length) ^ nonce);
         return k_hash;
     }
 };
 
 // hash table for kmers
-typedef std::unordered_map<kmer,int,kmer_hash> kmer_hash_table;
+typedef std::unordered_map<kmer, int, kmer_hash> kmer_hash_table;
 
 // Custom struct to store the kmers in a set
-struct kmer_set{
+struct kmer_set
+{
     kmer_hash_table kmer_hashes;
 
     // Helper function for inserting kmers
-    void insert_kmers(const std::vector<kmer> &kmers){
-        for (kmer k : kmers){
+    void insert_kmers(const std::vector<kmer> &kmers)
+    {
+        for (kmer k : kmers)
+        {
             kmer_hashes[k] = 1;
         }
     }
 
     // Helper function for computing the size of the kmer set
-    inline int kmer_set_size() const {
+    inline int kmer_set_size() const
+    {
         return kmer_hashes.size();
     }
 };
@@ -137,22 +133,17 @@ kmer_set kmer_set_from_fasta_file(
     const char fasta_filename[],
     const kmer_bitset &mask,
     const int kmer_size,
-    const std::function<bool(const kmer)> &sketching_cond
-);
+    const std::function<bool(const kmer)> &sketching_cond);
 std::vector<kmer_set> kmer_sets_from_fasta_files(
     int num_files,
     char *fasta_filenames[],
     const kmer_bitset &mask,
     const int kmer_size,
-    const std::function<bool(const kmer)> &sketching_cond
-);
+    const std::function<bool(const kmer)> &sketching_cond);
 // This version processes the fasta files in parallel using OpenCilk
 std::vector<kmer_set> parallel_kmer_sets_from_fasta_files(
     int num_files,
     char *fasta_filenames[],
     const kmer_bitset &mask,
     const int kmer_size,
-    const std::function<bool(const kmer)> &sketching_cond
-);
-
-
+    const std::function<bool(const kmer)> &sketching_cond);
