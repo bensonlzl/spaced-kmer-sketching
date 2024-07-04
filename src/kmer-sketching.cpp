@@ -1,12 +1,10 @@
 /**
  * @file kmer-sketching.cpp
- * @author your name (you@domain.com)
- * @brief
- * @version 0.1
+ * @author Benson Lin (bensonlinzl@gmail.com)
+ * @brief 
  * @date 2024-07-04
- *
+ * 
  * @copyright Copyright (c) 2024
- *
  */
 
 #include "kmer.hpp"

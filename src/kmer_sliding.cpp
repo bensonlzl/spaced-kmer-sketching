@@ -1,11 +1,12 @@
 /**
  * @file kmer_sliding.cpp
- * @author your name (you@domain.com)
+ * @author Benson Lin (bensonlinzl@gmail.com)
  * @brief
- * @version 0.1
  * @date 2024-07-04
  *
  * @copyright Copyright (c) 2024
+ * 
+ * This file contains functions related to the sliding window algorithm that computes the kmers in a given string of nucleotides
  *
  */
 #include "kmer.hpp"

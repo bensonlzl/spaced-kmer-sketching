@@ -1,28 +1,15 @@
 /**
  * @file kmer.hpp
- * @author your name (you@domain.com)
- * @brief
- * @version 0.1
+ * @author Benson Lin (bensonlinzl@gmail.com)
+ * @brief 
  * @date 2024-07-04
- *
+ * 
  * @copyright Copyright (c) 2024
- *
+ * 
+ * This is the main header file for functions and classes that interact with kmers
  */
 // STL includes
-#include <bitset>
-#include <cstring>
-#include <stdexcept>
-#include <cstdint>
-#include <cstdlib>
-#include <algorithm>
-#include <unordered_map>
-#include <iterator>
-#include <vector>
-#include <iostream>
-#include <fstream>
-#include <ranges>
-#include <functional>
-#include <random>
+#include "stl_includes.hpp"
 
 // Boost includes
 #include <boost/dynamic_bitset.hpp>
