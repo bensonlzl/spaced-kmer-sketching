@@ -114,7 +114,7 @@ void nucleotide_string_to_kmers(
     kmer_bitset current_kmer_window(KMER_BITSET_SIZE), reversed_current_kmer_window(KMER_BITSET_SIZE);
     
     // Initialise the reverse mask (is this necessary?)
-    const kmer_bitset reversed_mask = (reverse_kmer_bitset(mask) >> ((MAX_KMER_LENGTH - window_length) * NUCLEOTIDE_BIT_SIZE));
+    // const kmer_bitset reversed_mask = (reverse_kmer_bitset(mask) >> ((MAX_KMER_LENGTH - window_length) * NUCLEOTIDE_BIT_SIZE));  
 
     // Create the first kmer window
     for (int idx = 0; idx + 1 < window_length; ++idx)
@@ -143,10 +143,19 @@ void nucleotide_string_to_kmers(
 
         // Compute the masked kmers for both the main strand and the complement strand
         kmer_bitset masked_main_strand = current_kmer_window & mask;
-        kmer_bitset masked_reverse_complement_strand = reversed_current_kmer_window & reversed_mask;
+        kmer_bitset masked_reverse_complement_strand = reversed_current_kmer_window & mask; // use the same mask on the reverse complement strand
 
         // Determine the canonical kmer by lexicographical comparison of the main strand and the reverse complement
-        kmer canon_kmer = ((masked_main_strand < masked_reverse_complement_strand) ? kmer(window_length, current_kmer_window, mask, current_kmer_window & mask) : kmer(window_length, reversed_current_kmer_window, reversed_mask, reversed_current_kmer_window & reversed_mask));
+        kmer canon_kmer(window_length, kmer_bitset(), mask, kmer_bitset());
+
+        if (masked_main_strand < masked_reverse_complement_strand){
+            canon_kmer.kmer_bits = current_kmer_window;
+            canon_kmer.masked_bits = masked_main_strand;
+        }
+        else{
+            canon_kmer.kmer_bits = reversed_current_kmer_window;
+            canon_kmer.masked_bits = masked_reverse_complement_strand;
+        }
         
         if (sketching_cond(canon_kmer))
             kmer_list.push_back(canon_kmer);
