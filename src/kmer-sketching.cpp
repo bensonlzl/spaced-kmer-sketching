@@ -1,9 +1,24 @@
+/**
+ * @file kmer-sketching.cpp
+ * @author your name (you@domain.com)
+ * @brief 
+ * @version 0.1
+ * @date 2024-07-04
+ * 
+ * @copyright Copyright (c) 2024
+ * 
+ */
+
 #include "kmer.hpp"
 #include "ani_estimator.hpp"
 #include "fasta_processing.hpp"
 #include <chrono>
 
-// Helper function to print a list of strings
+/**
+ * @brief 
+ * 
+ * @param string_list 
+ */
 void print_strings(const std::vector<std::string> &string_list)
 {
     for (std::string s : string_list)

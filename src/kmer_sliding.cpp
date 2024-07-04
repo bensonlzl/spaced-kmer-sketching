@@ -1,7 +1,18 @@
+/**
+ * @file kmer_sliding.cpp
+ * @author your name (you@domain.com)
+ * @brief 
+ * @version 0.1
+ * @date 2024-07-04
+ * 
+ * @copyright Copyright (c) 2024
+ * 
+ */
 #include "kmer.hpp"
 #include "fasta_processing.hpp"
 
-/***
+/**
+ * @brief 
  * Helper function to update the kmer window
  * Shifts the kmer window to the LEFT by the size of the nucleotide and updates the bits
  *
@@ -16,7 +27,8 @@ inline void update_kmer_window(kmer_bitset &current_kmer_window, const uint8_t &
     current_kmer_window[1] = ((nucleotide_bits & 0x2) >> 1);
 }
 
-/***
+/**
+ * @brief 
  * Helper function to update the COMPLEMENTED kmer window
  * Shifts the kmer window to the RIGHT by the size of the nucleotide and updates the bits
  *
@@ -31,10 +43,9 @@ inline void update_complement_kmer_window(kmer_bitset &current_kmer_window, cons
     current_kmer_window[NUCLEOTIDE_BIT_SIZE * window_length - 1] = ((nucleotide_bits & 0x2) >> 1);
 }
 
-//
-//
 
-/***
+/**
+ * @brief 
  * Function to convert an ACGT string into a list of CANONICAL kmers by reference
  * Uses a sliding window with a kmer_bitset representing the current window in order to efficiently compute the current canonical kmer
  * NOTE: Has been replaced by the updated function below since the latter is much faster
@@ -84,7 +95,8 @@ void nucleotide_string_to_kmers_OLD_reverse(
     }
 }
 
-/***
+/**
+ * @brief 
  * Function to convert an ACGT string into a list of kmers by reference
  * Uses a sliding window with a kmer_bitset representing the current window in order to efficiently compute the current canonical kmer
  * Implicitly constructs the complement strand of nucleotide_string in order to efficiently compute the reverse complement
@@ -166,7 +178,8 @@ void nucleotide_string_to_kmers(
     }
 }
 
-/***
+/**
+ * @brief 
  * Helper function to compute the kmers in a list of nucleotide strings
  * This version computes by reference to avoid copying, appends the kmers to a given list of kmers
  *
@@ -189,7 +202,8 @@ void nucleotide_string_list_to_kmers_by_reference(
     }
 }
 
-/***
+/**
+ * @brief 
  * Helper function to compute the kmers in a list of nucleotide strings
  * This version explicity returns a vector of kmers
  *

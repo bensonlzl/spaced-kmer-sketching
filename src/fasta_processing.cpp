@@ -1,12 +1,21 @@
-/*
-This file contains a number of functions related to processing the  .fasta files used to store the genomic data
-*/
+/**
+ * @file fasta_processing.cpp
+ * @author your name (you@domain.com)
+ * @brief 
+ * @version 0.1
+ * @date 2024-07-04
+ * 
+ * This file contains a number of functions related to processing the  .fasta files used to store the genomic data
+ * 
+ * @copyright Copyright (c) 2024
+ */
 
 #include "fasta_processing.hpp"
 
 #include "logging.hpp"
 
-/***
+/**
+ * @brief 
  * Inlined function to convert nucleotide letters to 2-bit words
  * - A -> 0
  * - C -> 1
@@ -58,7 +67,8 @@ inline uint8_t nucleotide_to_bits(const char nucleotide)
     return ret_val;
 }
 
-/***
+/**
+ * @brief 
  * Helper function to read a fasta file and convert it into a list of strings
  * Referenced from https://rosettacode.org/wiki/FASTA_format#C++
  *
@@ -121,7 +131,8 @@ std::vector<std::string> strings_from_fasta(const char fasta_filename[])
     return return_strings;
 }
 
-/***
+/**
+ * @brief 
  * Helper function to add nucleotide strings
  * Takes in a reference to a vector of ACGT strings and the current string to be processed
  * Mutates the vector of ACGT strings by appending new ACGT strings
@@ -166,12 +177,8 @@ void add_nucleotide_strings(
     }
 }
 
-/*
-
-
-
-*/
-/***
+/**
+ * @brief 
  * Helper function to split a list of strings at non-nucleotide characters\
  * Directly calls add_nucleotide_strings over every string in the given list of strings
  * and returns the list of ACGT strings generated
@@ -189,7 +196,8 @@ std::vector<acgt_string> cut_nucleotide_strings(const std::vector<std::string> &
     return return_strings;
 }
 
-/***
+/**
+ * @brief 
  * Helper function to compute the nucleotide strings from a fasta file given the name of the file
  * Composes the above helper functions together for convenience
  *

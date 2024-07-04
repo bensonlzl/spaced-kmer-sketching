@@ -1,8 +1,18 @@
+/**
+ * @file kmer_set.cpp
+ * @author your name (you@domain.com)
+ * @brief 
+ * @version 0.1
+ * @date 2024-07-04
+ * 
+ * @copyright Copyright (c) 2024
+ * 
+ */
 #include "kmer.hpp"
 #include "fasta_processing.hpp"
 
-// Compute the number of elements in the intersection
-/***
+/**
+ * @brief 
  * Helper function to compute the number of kmers in the intersection of two kmer sets
  *
  * @param ks1 kmer_set containing the first set of kmers
@@ -29,7 +39,8 @@ int kmer_set_intersection(const kmer_set &ks1, const kmer_set &ks2)
     return inters;
 }
 
-/***
+/**
+ * @brief 
  * Helper function that generates a kmer_set from a .fasta file
  * Composes a number of other helper functions together
  *
@@ -55,7 +66,8 @@ kmer_set kmer_set_from_fasta_file(
     return ks;
 }
 
-/***
+/**
+ * @brief 
  * Iterates over a list of filenames and creates a kmer_set for each file
  *
  * @param num_files number of files to be processed
@@ -84,7 +96,8 @@ std::vector<kmer_set> kmer_sets_from_fasta_files(
     return kmer_sets;
 }
 
-/***
+/**
+ * @brief 
  * Parallel version of kmer_sets_from_fasta_files
  * Uses a cilk_for to parallelize the for loop over the fasta files
  *
@@ -118,7 +131,8 @@ std::vector<kmer_set> parallel_kmer_sets_from_fasta_files(
     return kmer_sets;
 }
 
-/***
+/**
+ * @brief 
  * Helper function to compute kmer_set intersections for a list of pairs of kmer_sets, computed pairwise
  * 
  * @param kmer_sets_1 first list of kmer_set pointers
@@ -139,7 +153,8 @@ std::vector<int> compute_pairwise_kmer_set_intersections(
     return intersection_values;
 }
 
-/***
+/**
+ * @brief 
  * Parallel version of compute_pairwise_kmer_set_intersections using cilk_for
  * 
  * @param kmer_sets_1 first list of kmer_set pointers

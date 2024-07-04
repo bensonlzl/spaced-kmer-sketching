@@ -1,13 +1,25 @@
+/**
+ * @file kmer_bitset.cpp
+ * @author your name (you@domain.com)
+ * @brief 
+ * @version 0.1
+ * @date 2024-07-04
+ * 
+ * @copyright Copyright (c) 2024
+ * 
+ */
 #include "kmer.hpp"
 
-/***
+/**
+ * @brief 
  * To save time in initialising bitsets for common operations involving a prefix of bits,
  * contiguous_kmer_array is initialised to store kmer_bitset with exactly 2l 1s
  * for each length 0 <= l <= MAX_KMER_LENGTH/
  */
 static kmer_bitset contiguous_kmer_array[MAX_KMER_LENGTH + 1];
 
-/***
+/**
+ * @brief 
  * Initialisation function to create the prefixes in contiguous_kmer_array
  * TO DO : Refactor this to be performed at compile time? Probably not possible since boost::dynamic_bitset is not a literal type
  */
@@ -27,7 +39,8 @@ void initialise_contiguous_kmer_array()
     }
 }
 
-/***
+/**
+ * @brief 
  * Helper function to obtain the correct contiguous kmer given the length
  * 
  * @param kmer_length length of the required kmer
@@ -40,7 +53,8 @@ kmer_bitset contiguous_kmer(const int kmer_length)
     return contiguous_kmer_array[kmer_length];
 }
 
-/***
+/**
+ * @brief 
  * To reverse a kmer in LOG_KMER_BITSET_SIZE operations, we will use some bit hacks
  *
  * For each power of two from 2 to KMER_BITSET_SIZE / 2,
@@ -49,7 +63,8 @@ kmer_bitset contiguous_kmer(const int kmer_length)
 kmer_bitset reversing_kmer_array[LOG_KMER_BITSET_SIZE];
 kmer_bitset invert_reversing_kmer_array[LOG_KMER_BITSET_SIZE];
 
-/***
+/**
+ * @brief 
  * Initialisation function to create the bitsets needed for reversing kmers
  * TO DO : Refactor this to be performed at compile time? Probably not possible since boost::dynamic_bitset is not a literal type
  */
@@ -77,8 +92,8 @@ void initialise_reversing_kmer_array()
     }
 }
 
-// 
-/***
+/**
+ * @brief 
  * Function to reverse a kmer_bitset (used for reverse complementation)
  * Creates a new kmer_bitset with the reversed bits
  * 
@@ -101,7 +116,8 @@ kmer_bitset reverse_kmer_bitset(const kmer_bitset &kbs)
     return cur;
 }
 
-/***
+/**
+ * @brief 
  * Helper function that generates a random spaced seed mask across a window of size window_size 
  * with exactly kmer_size characters that are used (rest are ignored)
  * Also accepts an optional random seed to randomise the seed

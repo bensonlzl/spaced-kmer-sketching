@@ -14,3 +14,7 @@ test*
 # build files 
 /build/
 /test/
+
+# doxygen directories
+/html/
+/latex/

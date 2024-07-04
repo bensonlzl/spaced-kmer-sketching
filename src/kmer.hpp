@@ -1,3 +1,13 @@
+/**
+ * @file kmer.hpp
+ * @author your name (you@domain.com)
+ * @brief 
+ * @version 0.1
+ * @date 2024-07-04
+ * 
+ * @copyright Copyright (c) 2024
+ * 
+ */
 // STL includes
 #include <bitset>
 #include <cstring>
