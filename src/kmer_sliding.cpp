@@ -1,7 +1,14 @@
 #include "kmer.hpp"
 #include "fasta_processing.hpp"
 
-// Helper function to update the kmer window
+/***
+ * Helper function to update the kmer window
+ * Shifts the kmer window to the LEFT by the size of the nucleotide and updates the bits
+ * 
+ * @param current_kmer_window A reference to the current kmer window
+ * @param nucleotide_bits The nucleotide bits of the current nucleotide
+ * @param window_length The length of the window
+ */
 inline void update_kmer_window(kmer_bitset &current_kmer_window, const uint8_t &nucleotide_bits, const int &window_length)
 {
     current_kmer_window <<= NUCLEOTIDE_BIT_SIZE;
@@ -9,15 +16,34 @@ inline void update_kmer_window(kmer_bitset &current_kmer_window, const uint8_t &
     current_kmer_window[1] = ((nucleotide_bits & 0x2) >> 1);
 }
 
-inline void update_reversed_kmer_window(kmer_bitset &current_kmer_window, const uint8_t &nucleotide_bits, const int &window_length)
+/***
+ * Helper function to update the COMPLEMENTED kmer window
+ * Shifts the kmer window to the RIGHT by the size of the nucleotide and updates the bits
+ * 
+ * @param current_kmer_window A reference to the current complement kmer window
+ * @param nucleotide_bits The nucleotide bits of the current nucleotide
+ * @param window_length The length of the window
+ */
+inline void update_complement_kmer_window(kmer_bitset &current_kmer_window, const uint8_t &nucleotide_bits, const int &window_length)
 {
     current_kmer_window >>= NUCLEOTIDE_BIT_SIZE;
     current_kmer_window[NUCLEOTIDE_BIT_SIZE * window_length - 2] = (nucleotide_bits & 0x1);
     current_kmer_window[NUCLEOTIDE_BIT_SIZE * window_length - 1] = ((nucleotide_bits & 0x2) >> 1);
 }
 
-// Function to convert a string it into a list of kmers
-// Assumes that the nucleotide string only contains acgt/ACGT
+//
+// 
+
+/***
+ * Function to convert an ACGT string into a list of kmers by reference
+ * 
+ * @param kmer_list reference to a list of kmers for appending new kmers
+ * @param nucleotide_string ACGT string representing the ACGT nucleotides
+ * @param mask bitset mask representing the spaced seed used
+ * @param window_length
+ * 
+ * NOTE: Has been replaced by the nucleotide_string_to_kmers_inbuilt_reverse function since the latter is much faster
+ */
 void nucleotide_string_to_kmers(
     std::vector<kmer> &kmer_list,
     const acgt_string &nucleotide_string,
@@ -80,7 +106,7 @@ void nucleotide_string_to_kmers_inbuilt_reverse(
     for (int idx = 0; idx + 1 < window_length; ++idx)
     {
         update_kmer_window(current_kmer_window, nucleotide_string[idx], window_length);
-        update_reversed_kmer_window(reversed_current_kmer_window, nucleotide_string[idx] ^ 0x3, window_length);
+        update_complement_kmer_window(reversed_current_kmer_window, nucleotide_string[idx] ^ 0x3, window_length);
     }
 
     // Shift the window by one each time and add each new kmer
@@ -88,7 +114,7 @@ void nucleotide_string_to_kmers_inbuilt_reverse(
     {
         int next_idx = idx + window_length - 1;
         update_kmer_window(current_kmer_window, nucleotide_string[next_idx], window_length);
-        update_reversed_kmer_window(reversed_current_kmer_window, nucleotide_string[next_idx] ^ 0x3, window_length);
+        update_complement_kmer_window(reversed_current_kmer_window, nucleotide_string[next_idx] ^ 0x3, window_length);
         if (DEBUG)
             std::cout << "Current kmer            :" << current_kmer_window << std::endl;
         if (DEBUG)
