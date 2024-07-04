@@ -132,18 +132,18 @@ int kmer_set_intersection(const kmer_set &ks1, const kmer_set &ks2);
 kmer_set kmer_set_from_fasta_file(
     const char fasta_filename[],
     const kmer_bitset &mask,
-    const int kmer_size,
+    const int window_length,
     const std::function<bool(const kmer)> &sketching_cond);
 std::vector<kmer_set> kmer_sets_from_fasta_files(
     int num_files,
     char *fasta_filenames[],
     const kmer_bitset &mask,
-    const int kmer_size,
+    const int window_length,
     const std::function<bool(const kmer)> &sketching_cond);
 // This version processes the fasta files in parallel using OpenCilk
 std::vector<kmer_set> parallel_kmer_sets_from_fasta_files(
     int num_files,
     char *fasta_filenames[],
     const kmer_bitset &mask,
-    const int kmer_size,
+    const int window_length,
     const std::function<bool(const kmer)> &sketching_cond);

@@ -35,14 +35,14 @@ int kmer_set_intersection(const kmer_set &ks1, const kmer_set &ks2)
  * 
  * @param fasta_filename path to the .fasta file to be read
  * @param mask spaced seed mask used 
- * @param kmer_size window size of the kmer
+ * @param window_length window size of the kmer
  * @param sketching_cond boolean function on kmers to decide which kmers are used
  * @return kmer_set containing the kmers sketched from that file 
  */
 kmer_set kmer_set_from_fasta_file(
     const char fasta_filename[],
     const kmer_bitset &mask,
-    const int kmer_size,
+    const int window_length,
     const std::function<bool(const kmer)> &sketching_cond)
 {
     kmer_set ks;
@@ -50,7 +50,7 @@ kmer_set kmer_set_from_fasta_file(
         nucleotide_string_list_to_kmers(
             nucleotide_strings_from_fasta_file(fasta_filename),
             mask,
-            kmer_size,
+            window_length,
             sketching_cond));
     return ks;
 }
@@ -61,7 +61,7 @@ kmer_set kmer_set_from_fasta_file(
  * @param num_files number of files to be processed
  * @param fasta_filenames pointer to the list of file names to be read
  * @param mask spaced seed mask used 
- * @param kmer_size window size of the kmer
+ * @param window_length window size of the kmer
  * @param sketching_cond boolean function on kmers to decide which kmers are used 
  * @return a list of kmer_sets corresponding to the file names given
  */
@@ -69,7 +69,7 @@ std::vector<kmer_set> kmer_sets_from_fasta_files(
     int num_files,
     char *fasta_filenames[],
     const kmer_bitset &mask,
-    const int kmer_size,
+    const int window_length,
     const std::function<bool(const kmer)> &sketching_cond)
 {
     std::vector<kmer_set> kmer_sets(num_files);
@@ -78,7 +78,7 @@ std::vector<kmer_set> kmer_sets_from_fasta_files(
         kmer_sets[i] = kmer_set_from_fasta_file(
             fasta_filenames[i],
             mask,
-            kmer_size,
+            window_length,
             sketching_cond);
     }
     return kmer_sets;
@@ -99,11 +99,11 @@ std::vector<kmer_set> parallel_kmer_sets_from_fasta_files(
     int num_files,
     char *fasta_filenames[],
     const kmer_bitset &mask,
-    const int kmer_size,
+    const int window_length,
     const std::function<bool(const kmer)> &sketching_cond)
 {
     // Debug: If the PARALLEL_FILES flag is set to 0, use the serial version
-    if (!PARALLEL_FILES) return kmer_sets_from_fasta_files(num_files,fasta_filenames,mask,kmer_size,sketching_cond);
+    if (!PARALLEL_FILES) return kmer_sets_from_fasta_files(num_files,fasta_filenames,mask,window_length,sketching_cond);
 
     std::vector<kmer_set> kmer_sets(num_files);
     cilk_for(int i = 0; i < num_files; ++i)
@@ -111,7 +111,7 @@ std::vector<kmer_set> parallel_kmer_sets_from_fasta_files(
         kmer_sets[i] = kmer_set_from_fasta_file(
             fasta_filenames[i],
             mask,
-            kmer_size,
+            window_length,
             sketching_cond);
     }
     return kmer_sets;
