@@ -9,7 +9,7 @@ static kmer_bitset contiguous_kmer_array[MAX_KMER_LENGTH + 1];
 
 /***
  * Initialisation function to create the prefixes in contiguous_kmer_array
- * TO DO : Refactor this to be performed at compile time?
+ * TO DO : Refactor this to be performed at compile time? Probably not possible since boost::dynamic_bitset is not a literal type
  */
 void initialise_contiguous_kmer_array()
 {
@@ -27,7 +27,12 @@ void initialise_contiguous_kmer_array()
     }
 }
 
-// Helper function to obtain the correct contiguous kmer given the length
+/***
+ * Helper function to obtain the correct contiguous kmer given the length
+ * 
+ * @param kmer_length length of the required kmer
+ * @return kmer_bitset of the correct length
+ */
 kmer_bitset contiguous_kmer(const int kmer_length)
 {
     if (kmer_length > MAX_KMER_LENGTH)
@@ -46,7 +51,7 @@ kmer_bitset invert_reversing_kmer_array[LOG_KMER_BITSET_SIZE];
 
 /***
  * Initialisation function to create the bitsets needed for reversing kmers
- * TO DO : Refactor this to be performed at compile time?
+ * TO DO : Refactor this to be performed at compile time? Probably not possible since boost::dynamic_bitset is not a literal type
  */
 void initialise_reversing_kmer_array()
 {
@@ -72,15 +77,25 @@ void initialise_reversing_kmer_array()
     }
 }
 
-// Function to reverse a kmer_bitset (used for reverse complementation)
+// 
+/***
+ * Function to reverse a kmer_bitset (used for reverse complementation)
+ * Creates a new kmer_bitset with the reversed bits
+ * 
+ * @param kbs kmer_bitset to be reversed 
+ * @return reversed kmer_bitset
+ */
 kmer_bitset reverse_kmer_bitset(const kmer_bitset &kbs)
 {
     int array_idx = 0;
     kmer_bitset cur = kbs;
+    
     // log KMER_BITSET_SIZE iterations of reversing in blocks of powers of 2
-
     for (int gap_size = NUCLEOTIDE_BIT_SIZE; gap_size < KMER_BITSET_SIZE; gap_size *= 2, ++array_idx)
     {
+        // Get one half of the bits by AND-ing with reversing_kmer_array and 
+        // the other half of the bis by AND-ing with invert_reversing_kmer_array,
+        // then swap them by performing appropriate bitshifts
         cur = (((cur & reversing_kmer_array[array_idx]) >> gap_size) | ((cur & (invert_reversing_kmer_array[array_idx])) << gap_size));
     }
     return cur;

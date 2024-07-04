@@ -24,13 +24,13 @@ typedef boost::dynamic_bitset<> kmer_bitset;
 
 // ONLY MODIFY THIS
 // const int LOG_KMER_UINT32_SIZE = 2;
-const int LOG_KMER_BITSET_SIZE = 6; // Make this as small as is necessary, increasing it makes the program slower
+constexpr int LOG_KMER_BITSET_SIZE = 6; // Make this as small as is necessary, increasing it makes the program slower
 // Setting it to 6 gives 64-bit bitsets -> 32-mers, 7 -> 64-mers, 8 -> 128-mers, 9 -> 256-mers, 10 -> 512-mers
 
 // DO NOT MODIFY THESE
-const int NUCLEOTIDE_BIT_SIZE = 2;
-const int KMER_BITSET_SIZE = (1 << LOG_KMER_BITSET_SIZE);
-const int MAX_KMER_LENGTH = (KMER_BITSET_SIZE / NUCLEOTIDE_BIT_SIZE);
+constexpr int NUCLEOTIDE_BIT_SIZE = 2;
+constexpr int KMER_BITSET_SIZE = (1 << LOG_KMER_BITSET_SIZE);
+constexpr int MAX_KMER_LENGTH = (KMER_BITSET_SIZE / NUCLEOTIDE_BIT_SIZE);
 
 // Functions for initialising contiguous kmers and the kmer reversing functions
 void initialise_contiguous_kmer_array();
