@@ -4,7 +4,7 @@
 /***
  * Helper function to update the kmer window
  * Shifts the kmer window to the LEFT by the size of the nucleotide and updates the bits
- * 
+ *
  * @param current_kmer_window A reference to the current kmer window
  * @param nucleotide_bits The nucleotide bits of the current nucleotide
  * @param window_length The length of the window
@@ -19,7 +19,7 @@ inline void update_kmer_window(kmer_bitset &current_kmer_window, const uint8_t &
 /***
  * Helper function to update the COMPLEMENTED kmer window
  * Shifts the kmer window to the RIGHT by the size of the nucleotide and updates the bits
- * 
+ *
  * @param current_kmer_window A reference to the current complement kmer window
  * @param nucleotide_bits The nucleotide bits of the current nucleotide
  * @param window_length The length of the window
@@ -32,16 +32,16 @@ inline void update_complement_kmer_window(kmer_bitset &current_kmer_window, cons
 }
 
 //
-// 
+//
 
 /***
  * Function to convert an ACGT string into a list of CANONICAL kmers by reference
  * Uses a sliding window with a kmer_bitset representing the current window in order to efficiently compute the current canonical kmer
  * NOTE: Has been replaced by the updated function below since the latter is much faster
- * 
+ *
  * @param kmer_list reference to a list of kmers for appending new kmers
  * @param nucleotide_string ACGT string representing the ACGT nucleotides
- * @param mask spaced seed mask used 
+ * @param mask spaced seed mask used
  * @param window_length window size of the kmer
  * @param sketching_cond boolean function on kmers to decide which kmers are used
  */
@@ -88,10 +88,10 @@ void nucleotide_string_to_kmers_OLD_reverse(
  * Function to convert an ACGT string into a list of kmers by reference
  * Uses a sliding window with a kmer_bitset representing the current window in order to efficiently compute the current canonical kmer
  * Implicitly constructs the complement strand of nucleotide_string in order to efficiently compute the reverse complement
- * 
+ *
  * @param kmer_list reference to a list of kmers for appending new kmers
  * @param nucleotide_string ACGT string representing the ACGT nucleotides
- * @param mask spaced seed mask used 
+ * @param mask spaced seed mask used
  * @param window_length window size of the kmer
  * @param sketching_cond boolean function on kmers to decide which kmers are used
  */
@@ -112,9 +112,9 @@ void nucleotide_string_to_kmers(
 
     // Initialise an empty kmer for both the main strand and the complement strand
     kmer_bitset current_kmer_window(KMER_BITSET_SIZE), reversed_current_kmer_window(KMER_BITSET_SIZE);
-    
+
     // Initialise the reverse mask (is this necessary?)
-    // const kmer_bitset reversed_mask = (reverse_kmer_bitset(mask) >> ((MAX_KMER_LENGTH - window_length) * NUCLEOTIDE_BIT_SIZE));  
+    // const kmer_bitset reversed_mask = (reverse_kmer_bitset(mask) >> ((MAX_KMER_LENGTH - window_length) * NUCLEOTIDE_BIT_SIZE));
 
     // Create the first kmer window
     for (int idx = 0; idx + 1 < window_length; ++idx)
@@ -123,13 +123,13 @@ void nucleotide_string_to_kmers(
         update_kmer_window(current_kmer_window, cur_nucleotide, window_length);
 
         // nucleotide_string[idx] ^ 0x3 computes the complementary nucleotide
-        update_complement_kmer_window(reversed_current_kmer_window, cur_nucleotide ^ 0x3, window_length); 
+        update_complement_kmer_window(reversed_current_kmer_window, cur_nucleotide ^ 0x3, window_length);
     }
 
     // Shift the window by one each time and add each new kmer
     for (int idx = 0; idx + window_length - 1 < nucleotide_string_length; ++idx)
     {
-        // Get the index of the next nucleotide character 
+        // Get the index of the next nucleotide character
         int next_idx = idx + window_length - 1;
         uint8_t cur_nucleotide = nucleotide_string[next_idx];
 
@@ -146,17 +146,21 @@ void nucleotide_string_to_kmers(
         kmer_bitset masked_reverse_complement_strand = reversed_current_kmer_window & mask; // use the same mask on the reverse complement strand
 
         // Determine the canonical kmer by lexicographical comparison of the main strand and the reverse complement
-        kmer canon_kmer(window_length, kmer_bitset(), mask, kmer_bitset());
 
-        if (masked_main_strand < masked_reverse_complement_strand){
-            canon_kmer.kmer_bits = current_kmer_window;
-            canon_kmer.masked_bits = masked_main_strand;
+        kmer_bitset *canonical_kmer_bits, *masked_canonical_kmer_bits;
+
+        if (masked_main_strand < masked_reverse_complement_strand)
+        {
+            canonical_kmer_bits = &current_kmer_window;
+            masked_canonical_kmer_bits = &masked_main_strand;
         }
-        else{
-            canon_kmer.kmer_bits = reversed_current_kmer_window;
-            canon_kmer.masked_bits = masked_reverse_complement_strand;
+        else
+        {
+            canonical_kmer_bits = &reversed_current_kmer_window;
+            masked_canonical_kmer_bits = &masked_reverse_complement_strand;
         }
-        
+
+        kmer canon_kmer(window_length, *canonical_kmer_bits, mask, *masked_canonical_kmer_bits);
         if (sketching_cond(canon_kmer))
             kmer_list.push_back(canon_kmer);
     }
@@ -165,10 +169,10 @@ void nucleotide_string_to_kmers(
 /***
  * Helper function to compute the kmers in a list of nucleotide strings
  * This version computes by reference to avoid copying, appends the kmers to a given list of kmers
- * 
+ *
  * @param kmer_list reference to a list of kmers for appending new kmers
  * @param nucleotide_strings list of ACGT strings representing the ACGT nucleotides
- * @param mask spaced seed mask used 
+ * @param mask spaced seed mask used
  * @param window_length window size of the kmer
  * @param sketching_cond boolean function on kmers to decide which kmers are used
  */
@@ -188,10 +192,10 @@ void nucleotide_string_list_to_kmers_by_reference(
 /***
  * Helper function to compute the kmers in a list of nucleotide strings
  * This version explicity returns a vector of kmers
- * 
+ *
  * @param kmer_list reference to a list of kmers for appending new kmers
  * @param nucleotide_strings list of ACGT strings representing the ACGT nucleotides
- * @param mask spaced seed mask used 
+ * @param mask spaced seed mask used
  * @param window_length window size of the kmer
  * @param sketching_cond boolean function on kmers to decide which kmers are used
  * @return returns a list of kmers in the nucleotide strings
