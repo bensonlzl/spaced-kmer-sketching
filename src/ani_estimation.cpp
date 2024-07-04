@@ -1,24 +1,24 @@
 /**
  * @file ani_estimation.cpp
  * @author your name (you@domain.com)
- * @brief 
+ * @brief
  * @version 0.1
  * @date 2024-07-04
- * 
+ *
  * This file contains functions involving ANI estimation from set intersections
- * 
+ *
  * @copyright Copyright (c) 2024
  */
 
 #include "ani_estimator.hpp"
 
 /**
- * @brief 
+ * @brief
  * Helper function to compute the containment based on the intersection size and the set size
- * 
+ *
  * @param intersection number of elements in the intersection
  * @param set_size size of the set
- * @return double 
+ * @return double
  */
 double containment(int intersection, int set_size)
 {
@@ -26,12 +26,12 @@ double containment(int intersection, int set_size)
 }
 
 /**
- * @brief 
+ * @brief
  * Helper function to compute (containment)^(1/k) as an estimate of the ANI
- * 
+ *
  * @param containment containment value
  * @param kmer_num_ones number of positions used in the kmer
- * @return double 
+ * @return double
  */
 double binomial_estimator(double containment, int kmer_num_ones)
 {

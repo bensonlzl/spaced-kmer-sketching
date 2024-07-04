@@ -1,12 +1,12 @@
 /**
  * @file kmer.hpp
  * @author your name (you@domain.com)
- * @brief 
+ * @brief
  * @version 0.1
  * @date 2024-07-04
- * 
+ *
  * @copyright Copyright (c) 2024
- * 
+ *
  */
 // STL includes
 #include <bitset>
@@ -54,8 +54,7 @@ kmer_bitset reverse_kmer_bitset(const kmer_bitset &kbs);
 kmer_bitset generate_random_spaced_seed_mask(
     const int window_size,
     const int kmer_size,
-    size_t random_seed = 0
-);
+    size_t random_seed = 0);
 
 // Struct to store information about the kmer
 struct kmer
@@ -167,10 +166,8 @@ std::vector<kmer_set> parallel_kmer_sets_from_fasta_files(
     const int window_length,
     const std::function<bool(const kmer)> &sketching_cond);
 std::vector<int> compute_pairwise_kmer_set_intersections(
-    const std::vector<kmer_set*> &kmer_sets_1,
-    const std::vector<kmer_set*> &kmer_sets_2
-);
+    const std::vector<kmer_set *> &kmer_sets_1,
+    const std::vector<kmer_set *> &kmer_sets_2);
 std::vector<int> parallel_compute_pairwise_kmer_set_intersections(
-    const std::vector<kmer_set*> &kmer_sets_1,
-    const std::vector<kmer_set*> &kmer_sets_2
-);
+    const std::vector<kmer_set *> &kmer_sets_1,
+    const std::vector<kmer_set *> &kmer_sets_2);

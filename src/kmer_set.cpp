@@ -1,18 +1,18 @@
 /**
  * @file kmer_set.cpp
  * @author your name (you@domain.com)
- * @brief 
+ * @brief
  * @version 0.1
  * @date 2024-07-04
- * 
+ *
  * @copyright Copyright (c) 2024
- * 
+ *
  */
 #include "kmer.hpp"
 #include "fasta_processing.hpp"
 
 /**
- * @brief 
+ * @brief
  * Helper function to compute the number of kmers in the intersection of two kmer sets
  *
  * @param ks1 kmer_set containing the first set of kmers
@@ -40,7 +40,7 @@ int kmer_set_intersection(const kmer_set &ks1, const kmer_set &ks2)
 }
 
 /**
- * @brief 
+ * @brief
  * Helper function that generates a kmer_set from a .fasta file
  * Composes a number of other helper functions together
  *
@@ -67,7 +67,7 @@ kmer_set kmer_set_from_fasta_file(
 }
 
 /**
- * @brief 
+ * @brief
  * Iterates over a list of filenames and creates a kmer_set for each file
  *
  * @param num_files number of files to be processed
@@ -97,7 +97,7 @@ std::vector<kmer_set> kmer_sets_from_fasta_files(
 }
 
 /**
- * @brief 
+ * @brief
  * Parallel version of kmer_sets_from_fasta_files
  * Uses a cilk_for to parallelize the for loop over the fasta files
  *
@@ -132,47 +132,52 @@ std::vector<kmer_set> parallel_kmer_sets_from_fasta_files(
 }
 
 /**
- * @brief 
+ * @brief
  * Helper function to compute kmer_set intersections for a list of pairs of kmer_sets, computed pairwise
- * 
+ *
  * @param kmer_sets_1 first list of kmer_set pointers
  * @param kmer_sets_2 second list of kmer_set pointers
- * @return list of ints representing the intersection size of the corresponding pair of kmer sets 
+ * @return list of ints representing the intersection size of the corresponding pair of kmer sets
  */
 std::vector<int> compute_pairwise_kmer_set_intersections(
-    const std::vector<kmer_set*> &kmer_sets_1,
-    const std::vector<kmer_set*> &kmer_sets_2
-){
-    if (kmer_sets_1.size() != kmer_sets_2.size()){
+    const std::vector<kmer_set *> &kmer_sets_1,
+    const std::vector<kmer_set *> &kmer_sets_2)
+{
+    if (kmer_sets_1.size() != kmer_sets_2.size())
+    {
         throw std::runtime_error("Lists of kmer sets for intersection computation have different lengths");
     }
     std::vector<int> intersection_values(kmer_sets_1.size());
-    for (int i = 0; i < kmer_sets_1.size(); ++i){
-        intersection_values[i] = kmer_set_intersection(*kmer_sets_1[i],*kmer_sets_2[i]);
-    } 
+    for (int i = 0; i < kmer_sets_1.size(); ++i)
+    {
+        intersection_values[i] = kmer_set_intersection(*kmer_sets_1[i], *kmer_sets_2[i]);
+    }
     return intersection_values;
 }
 
 /**
- * @brief 
+ * @brief
  * Parallel version of compute_pairwise_kmer_set_intersections using cilk_for
- * 
+ *
  * @param kmer_sets_1 first list of kmer_set pointers
  * @param kmer_sets_2 second list of kmer_set pointers
- * @return list of ints representing the intersection size of the corresponding pair of kmer sets 
+ * @return list of ints representing the intersection size of the corresponding pair of kmer sets
  */
 std::vector<int> parallel_compute_pairwise_kmer_set_intersections(
-    const std::vector<kmer_set*> &kmer_sets_1,
-    const std::vector<kmer_set*> &kmer_sets_2
-){
-    if (!PARALLEL_ENABLE) return compute_pairwise_kmer_set_intersections(kmer_sets_1,kmer_sets_2);
+    const std::vector<kmer_set *> &kmer_sets_1,
+    const std::vector<kmer_set *> &kmer_sets_2)
+{
+    if (!PARALLEL_ENABLE)
+        return compute_pairwise_kmer_set_intersections(kmer_sets_1, kmer_sets_2);
 
-    if (kmer_sets_1.size() != kmer_sets_2.size()){
+    if (kmer_sets_1.size() != kmer_sets_2.size())
+    {
         throw std::runtime_error("Lists of kmer sets for intersection computation have different lengths");
     }
     std::vector<int> intersection_values(kmer_sets_1.size());
-    cilk_for (int i = 0; i < kmer_sets_1.size(); ++i){
-        intersection_values[i] = kmer_set_intersection(*kmer_sets_1[i],*kmer_sets_2[i]);
-    } 
+    cilk_for(int i = 0; i < kmer_sets_1.size(); ++i)
+    {
+        intersection_values[i] = kmer_set_intersection(*kmer_sets_1[i], *kmer_sets_2[i]);
+    }
     return intersection_values;
 }

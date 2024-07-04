@@ -1,12 +1,12 @@
 /**
  * @file kmers.cpp
  * @author your name (you@domain.com)
- * @brief 
+ * @brief
  * @version 0.1
  * @date 2024-07-04
- * 
+ *
  * @copyright Copyright (c) 2024
- * 
+ *
  */
 #include "kmer.hpp"
 
