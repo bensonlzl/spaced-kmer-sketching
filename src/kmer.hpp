@@ -147,3 +147,11 @@ std::vector<kmer_set> parallel_kmer_sets_from_fasta_files(
     const kmer_bitset &mask,
     const int window_length,
     const std::function<bool(const kmer)> &sketching_cond);
+std::vector<int> compute_pairwise_kmer_set_intersections(
+    const std::vector<kmer_set*> &kmer_sets_1,
+    const std::vector<kmer_set*> &kmer_sets_2
+);
+std::vector<int> parallel_compute_pairwise_kmer_set_intersections(
+    const std::vector<kmer_set*> &kmer_sets_1,
+    const std::vector<kmer_set*> &kmer_sets_2
+);

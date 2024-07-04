@@ -20,10 +20,37 @@ inline bool sketching_condition(const kmer &test_kmer)
     return (fmh(test_kmer) % c == 0);
 }
 
+void write_to_csv(
+    const std::vector<std::string> &filenames1, 
+    const std::vector<std::string> &filenames2, 
+    const std::vector<double> &estimated_values, 
+    const std::string &output_filename
+) {
+    // Open the output file
+    std::ofstream output_file(output_filename);
+    if (!output_file.is_open()) {
+        std::cerr << "Error: Unable to open file " << output_filename << " for writing." << std::endl;
+        return;
+    }
+    
+    // Write header
+    output_file << "File 1,File 2,Estimated Value" << std::endl;
+    
+    // Write data
+    size_t numEntries = std::min(std::min(filenames1.size(), filenames2.size()), estimated_values.size());
+    for (size_t i = 0; i < numEntries; ++i) {
+        output_file << filenames1[i] << "," << filenames2[i] << "," << estimated_values[i] << std::endl;
+    }
+    
+    // Close the file
+    output_file.close();
+}
+
+
 void test_compute_pairwise_ANI_estimation_contiguous_kmers(const int kmer_size, const int num_files, char *filenames[])
 {
     kmer_bitset mask = contiguous_kmer(kmer_size);
-    const int kmer_num_indices = (mask.count() / NUCLEOTIDE_BIT_SIZE);
+    const int kmer_num_indices = (mask.count() / NUCLEOTIDE_BIT_SIZE); // How many nucleotides are in the kmer
 
     if (LOGGING)
         std::clog << INFO_LOG << " kmer size = " << kmer_size << std::endl;
@@ -40,18 +67,44 @@ void test_compute_pairwise_ANI_estimation_contiguous_kmers(const int kmer_size, 
         sketching_condition);
     auto t_postprocess_kmers = std::chrono::high_resolution_clock::now();
     std::cout << "Time taken for sketching = " << std::chrono::duration<double, std::milli>(t_postprocess_kmers - t_preprocess_string).count() << " ms" << std::endl;
+
+    std::vector<kmer_set*> kmer_sets_1, kmer_sets_2;
+    std::vector<std::string> kmer_filenames_1, kmer_filenames_2;
+    
+
     int data_size = kmer_set_data.size();
+
+    for (int i = 0; i < data_size; ++i){
+        kmer_sets_1.push_back(&kmer_set_data[i]);
+        kmer_sets_2.push_back(&kmer_set_data[(i+1)%data_size]);
+
+        kmer_filenames_1.push_back(std::string(filenames[i]));
+        kmer_filenames_2.push_back(std::string(filenames[(i+1)%data_size]));
+    }
+
+    std::vector<int> intersection_vals = parallel_compute_pairwise_kmer_set_intersections(kmer_sets_1,kmer_sets_2);
+    std::vector<double> containment_vals(data_size), ani_estimate_vals(data_size);
+
     for (int i = 0; i < data_size; ++i)
     {
-        std::cout << "Comparing files " << i << " and " << i + 1 << std::endl;
-        int intersection = kmer_set_intersection(kmer_set_data[i], kmer_set_data[(i + 1) % data_size]);
-        double contain = containment(intersection, kmer_set_data[i].kmer_set_size());
-        double ani_estimate = binomial_estimator(contain, kmer_num_indices);
-        std::cout << "Intersection = " << intersection << "\nContainment = " << contain << "\nANI Estimate = " << ani_estimate << std::endl;
+        std::cout << "Comparing files " << kmer_filenames_1[i] << " and " << kmer_filenames_2[i] << std::endl;
+        containment_vals[i] = containment(intersection_vals[i], kmer_sets_1[i]->kmer_set_size());
+        ani_estimate_vals[i] = binomial_estimator(containment_vals[i], kmer_num_indices);
+        std::cout << "Intersection = " << intersection_vals[i] << "\nContainment = " << containment_vals[i] << "\nANI Estimate = " << ani_estimate_vals[i] << std::endl;
     }
+
     auto t_postcomparison = std::chrono::high_resolution_clock::now();
     std::cout << "Time taken for comparison = " << std::chrono::duration<double, std::milli>(t_postcomparison - t_postprocess_kmers).count() << " ms" << std::endl;
+
+    write_to_csv(
+        kmer_filenames_1,
+        kmer_filenames_2,
+        ani_estimate_vals,
+        "test.csv"
+    );
 }
+
+
 
 int main(int argc, char *argv[])
 {

@@ -103,7 +103,7 @@ std::vector<kmer_set> parallel_kmer_sets_from_fasta_files(
     const std::function<bool(const kmer)> &sketching_cond)
 {
     // Debug: If the PARALLEL_FILES flag is set to 0, use the serial version
-    if (!PARALLEL_FILES)
+    if (!PARALLEL_ENABLE)
         return kmer_sets_from_fasta_files(num_files, fasta_filenames, mask, window_length, sketching_cond);
 
     std::vector<kmer_set> kmer_sets(num_files);
@@ -116,4 +116,48 @@ std::vector<kmer_set> parallel_kmer_sets_from_fasta_files(
             sketching_cond);
     }
     return kmer_sets;
+}
+
+/***
+ * Helper function to compute kmer_set intersections for a list of pairs of kmer_sets, computed pairwise
+ * 
+ * @param kmer_sets_1 first list of kmer_set pointers
+ * @param kmer_sets_2 second list of kmer_set pointers
+ * @return list of ints representing the intersection size of the corresponding pair of kmer sets 
+ */
+std::vector<int> compute_pairwise_kmer_set_intersections(
+    const std::vector<kmer_set*> &kmer_sets_1,
+    const std::vector<kmer_set*> &kmer_sets_2
+){
+    if (kmer_sets_1.size() != kmer_sets_2.size()){
+        throw std::runtime_error("Lists of kmer sets for intersection computation have different lengths");
+    }
+    std::vector<int> intersection_values(kmer_sets_1.size());
+    for (int i = 0; i < kmer_sets_1.size(); ++i){
+        intersection_values[i] = kmer_set_intersection(*kmer_sets_1[i],*kmer_sets_2[i]);
+    } 
+    return intersection_values;
+}
+
+/***
+ * Parallel version of compute_pairwise_kmer_set_intersections using cilk_for
+ * 
+ * @param kmer_sets_1 first list of kmer_set pointers
+ * @param kmer_sets_2 second list of kmer_set pointers
+ * @return list of ints representing the intersection size of the corresponding pair of kmer sets 
+ */
+std::vector<int> parallel_compute_pairwise_kmer_set_intersections(
+    const std::vector<kmer_set*> &kmer_sets_1,
+    const std::vector<kmer_set*> &kmer_sets_2
+){
+    if (!PARALLEL_ENABLE) return compute_pairwise_kmer_set_intersections(kmer_sets_1,kmer_sets_2);
+
+    if (kmer_sets_1.size() != kmer_sets_2.size()){
+        throw std::runtime_error("Lists of kmer sets for intersection computation have different lengths");
+    }
+    std::vector<int> intersection_values(kmer_sets_1.size());
+    cilk_for (int i = 0; i < kmer_sets_1.size(); ++i){
+        intersection_values[i] = kmer_set_intersection(*kmer_sets_1[i],*kmer_sets_2[i]);
+    } 
+    return intersection_values;
 }
