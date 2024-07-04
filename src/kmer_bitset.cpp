@@ -100,3 +100,33 @@ kmer_bitset reverse_kmer_bitset(const kmer_bitset &kbs)
     }
     return cur;
 }
+
+/***
+ * Helper function that generates a random spaced seed mask across a window of size window_size 
+ * with exactly kmer_size characters that are used (rest are ignored)
+ * Also accepts an optional random seed to randomise the seed
+ * 
+ * @param window_size total span of the spaced seed
+ * @param kmer_size number of characters to be used in the spaced seed
+ * @param random_seed random seed to generate a different spaced seed, default is 0 as defined in kmer.hpp
+ * @return randomly generated kmer_bitset as a mask
+ */
+kmer_bitset generate_random_spaced_seed_mask(
+    const int window_size,
+    const int kmer_size,
+    size_t random_seed 
+){
+    kmer_bitset mask(KMER_BITSET_SIZE);
+
+    std::vector<int> bit_indices(window_size);
+    std::iota(bit_indices.begin(), bit_indices.end(), 0);
+    std::shuffle(bit_indices.begin(), bit_indices.end(), std::mt19937(random_seed));
+
+    for (int i = 0; i < kmer_size; ++i){
+        for (int j = 0; j < NUCLEOTIDE_BIT_SIZE; ++j){
+            mask[NUCLEOTIDE_BIT_SIZE * bit_indices[i] + j] = 1;
+        }
+    }
+
+    return mask;
+}

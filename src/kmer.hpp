@@ -1,3 +1,4 @@
+// STL includes
 #include <bitset>
 #include <cstring>
 #include <stdexcept>
@@ -11,6 +12,9 @@
 #include <fstream>
 #include <ranges>
 #include <functional>
+#include <random>
+
+// Boost includes
 #include <boost/dynamic_bitset.hpp>
 #include <boost/functional/hash.hpp>
 
@@ -37,6 +41,11 @@ void initialise_contiguous_kmer_array();
 kmer_bitset contiguous_kmer(const int kmer_length);
 void initialise_reversing_kmer_array();
 kmer_bitset reverse_kmer_bitset(const kmer_bitset &kbs);
+kmer_bitset generate_random_spaced_seed_mask(
+    const int window_size,
+    const int kmer_size,
+    size_t random_seed = 0
+);
 
 // Struct to store information about the kmer
 struct kmer
