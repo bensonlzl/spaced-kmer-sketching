@@ -19,5 +19,26 @@ For example, the nucleotide string `ACCGTAAATTCGA` consists of the 5-mers
 
 ## What are spaced seeds?
 
+Spaced seeds take k-mers and insert wildcard positions in the k-mer,
+positions where we simply ignore the nucleotide.
+
+For example, if we are looking at a standard 8-mer `ACGTACGT` 
+from `AAACGTACGTTT`, we can view it as choosing a window length of 8
+and using the seed `11111111`
+
+```
+AAACGTACGTTT
+  ||||||||  
+..ACGTACGT..
+```
+
+Now if we use a different seed, say `11001011`, we get the 5-mer `ACAGT` 
+
+```
+AAACGTACGTTT
+  ||  | ||  
+..AC..A.GT..
+```
+
 ## What is Sketching?
 

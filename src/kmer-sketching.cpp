@@ -1,9 +1,9 @@
 /**
  * @file kmer-sketching.cpp
  * @author Benson Lin (bensonlinzl@gmail.com)
- * @brief 
+ * @brief
  * @date 2024-07-04
- * 
+ *
  * @copyright Copyright (c) 2024
  */
 
@@ -33,6 +33,16 @@ inline bool sketching_condition(const kmer &test_kmer)
     return (fmh(test_kmer) % c == 0);
 }
 
+/**
+ * @brief 
+ * Helper function that writes a list of estimated ANI values with the corresponding filenames and masks to a csv
+ * 
+ * @param filenames1 first list of filenames
+ * @param filenames2 second list of filenames
+ * @param estimated_values list of estimated ANI values
+ * @param mask mask used 
+ * @param output_filename name of the output csv 
+ */
 void write_to_csv(
     const std::vector<std::string> &filenames1,
     const std::vector<std::string> &filenames2,
@@ -62,16 +72,50 @@ void write_to_csv(
     output_file.close();
 }
 
-void test_compute_pairwise_ANI_estimation_contiguous_kmers(const int window_size, const int kmer_size, const int num_files, char *filenames[])
+/**
+ * @brief 
+ * Helper function to compute all pairwise combinations in a list (vector)
+ * 
+ * @tparam T 
+ * @param v list of elements (vector)
+ * @return a pair of vectors that whose corresponding pairs of elements represent every pair of elements in v
+ */
+template<typename T>
+std::pair<std::vector<T>, std::vector<T>> generate_pairs_from_vector(
+    const std::vector<T> &v
+){
+    std::vector<T> v1, v2;
+
+    for (size_t i = 0; i < v.size(); ++i){
+        for (size_t j = 0; j < v.size(); ++j){
+            v1.push_back(v[i]);
+            v2.push_back(v[j]);
+        }
+    }
+
+    return make_pair(v1,v2);
+}
+
+/**
+ * @brief 
+ * Helper function to compute pairwise ANI estimation (adjacent pairs) with a random space seed
+ * 
+ * @param window_size total window size of the spaced seed
+ * @param kmer_size number of characters used in the kmer
+ * @param num_files number of files
+ * @param filenames list of filenames (as a char* array)
+ * @param output_filename name of the output file
+ */
+void test_compute_adjacent_pairwise_ANI_estimation_random_spaced_kmers(
+    const int window_size,
+    const int kmer_size,
+    const int num_files,
+    char *filenames[],
+    const std::string &output_filename)
 {
     // kmer_bitset mask = contiguous_kmer(kmer_size);
     kmer_bitset mask = generate_random_spaced_seed_mask(window_size, kmer_size);
     const int kmer_num_indices = (mask.count() / NUCLEOTIDE_BIT_SIZE); // How many nucleotides are in the kmer
-
-    if (LOGGING)
-        std::clog << INFO_LOG << " kmer size = " << kmer_size << std::endl;
-    if (LOGGING)
-        std::clog << INFO_LOG << " kmer mask = " << mask << std::endl;
 
     auto t_preprocess_string = std::chrono::high_resolution_clock::now();
 
@@ -83,12 +127,9 @@ void test_compute_pairwise_ANI_estimation_contiguous_kmers(const int window_size
         sketching_condition);
     auto t_postprocess_kmers = std::chrono::high_resolution_clock::now();
     std::cout << "Time taken for sketching = " << std::chrono::duration<double, std::milli>(t_postprocess_kmers - t_preprocess_string).count() << " ms" << std::endl;
-
     std::vector<kmer_set *> kmer_sets_1, kmer_sets_2;
     std::vector<std::string> kmer_filenames_1, kmer_filenames_2;
-
     int data_size = kmer_set_data.size();
-
     for (int i = 0; i < data_size; ++i)
     {
         kmer_sets_1.push_back(&kmer_set_data[i]);
@@ -97,32 +138,94 @@ void test_compute_pairwise_ANI_estimation_contiguous_kmers(const int window_size
         kmer_filenames_1.push_back(std::string(filenames[i]));
         kmer_filenames_2.push_back(std::string(filenames[(i + 1) % data_size]));
     }
-
     std::vector<int> intersection_vals = parallel_compute_pairwise_kmer_set_intersections(kmer_sets_1, kmer_sets_2);
     std::vector<double> containment_vals(data_size), ani_estimate_vals(data_size);
-
     for (int i = 0; i < data_size; ++i)
     {
-        // std::cout << "Comparing files " << kmer_filenames_1[i] << " and " << kmer_filenames_2[i] << std::endl;
         containment_vals[i] = containment(intersection_vals[i], kmer_sets_1[i]->kmer_set_size());
         ani_estimate_vals[i] = binomial_estimator(containment_vals[i], kmer_num_indices);
-        // std::cout << "Intersection = " << intersection_vals[i] << "\nContainment = " << containment_vals[i] << "\nANI Estimate = " << ani_estimate_vals[i] << std::endl;
     }
-
     auto t_postcomparison = std::chrono::high_resolution_clock::now();
     std::cout << "Time taken for comparison = " << std::chrono::duration<double, std::milli>(t_postcomparison - t_postprocess_kmers).count() << " ms" << std::endl;
-
     write_to_csv(
         kmer_filenames_1,
         kmer_filenames_2,
         ani_estimate_vals,
         mask,
-        "test_spaced.csv");
+        output_filename);
+}
+
+
+
+/**
+ * @brief 
+ * Helper function to compute all pairwise ANI estimation with a random space seed
+ * 
+ * @param window_size total window size of the spaced seed
+ * @param kmer_size number of characters used in the kmer
+ * @param num_files number of files
+ * @param filenames list of filenames (as a char* array)
+ * @param output_filename name of the output file
+ */
+void test_compute_all_pairwise_ANI_estimation_random_spaced_kmers(
+    const int window_size,
+    const int kmer_size,
+    const int num_files,
+    char *filenames[],
+    const std::string &output_filename)
+{
+    // kmer_bitset mask = contiguous_kmer(kmer_size);
+    kmer_bitset mask = generate_random_spaced_seed_mask(window_size, kmer_size);
+    const int kmer_num_indices = (mask.count() / NUCLEOTIDE_BIT_SIZE); // How many nucleotides are in the kmer
+
+    auto t_preprocess_string = std::chrono::high_resolution_clock::now();
+
+    std::vector<kmer_set> kmer_set_data = parallel_kmer_sets_from_fasta_files(
+        num_files,
+        filenames,
+        mask,
+        kmer_size,
+        sketching_condition);
+    auto t_postprocess_kmers = std::chrono::high_resolution_clock::now();
+    std::cout << "Time taken for sketching = " << std::chrono::duration<double, std::milli>(t_postprocess_kmers - t_preprocess_string).count() << " ms" << std::endl;
+    std::vector<kmer_set *> kmer_sets_init;
+    std::vector<std::string> kmer_filenames_init;
+
+    for (int i = 0; i < kmer_set_data.size(); ++i)
+    {
+        kmer_sets_init.push_back(&kmer_set_data[i]);
+        kmer_filenames_init.push_back(std::string(filenames[i]));
+    }
+
+    auto kmer_sets_pairwise = generate_pairs_from_vector(kmer_sets_init);
+    auto kmer_filenames_pairwise = generate_pairs_from_vector(kmer_filenames_init);
+
+    std::vector<int> intersection_vals = parallel_compute_pairwise_kmer_set_intersections(
+        kmer_sets_pairwise.first, 
+        kmer_sets_pairwise.second
+    );
+
+    int data_size = intersection_vals.size();
+
+    std::vector<double> containment_vals(data_size), ani_estimate_vals(data_size);
+    for (int i = 0; i < data_size; ++i)
+    {
+        containment_vals[i] = containment(intersection_vals[i], kmer_sets_pairwise.first[i]->kmer_set_size());
+        ani_estimate_vals[i] = binomial_estimator(containment_vals[i], kmer_num_indices);
+    }
+    auto t_postcomparison = std::chrono::high_resolution_clock::now();
+    std::cout << "Time taken for comparison = " << std::chrono::duration<double, std::milli>(t_postcomparison - t_postprocess_kmers).count() << " ms" << std::endl;
+    write_to_csv(
+        kmer_filenames_pairwise.first,
+        kmer_filenames_pairwise.second,
+        ani_estimate_vals,
+        mask,
+        output_filename);
 }
 
 int main(int argc, char *argv[])
 {
     initialise_contiguous_kmer_array();
     initialise_reversing_kmer_array();
-    test_compute_pairwise_ANI_estimation_contiguous_kmers(30, 20, argc - 1, argv + 1); // test on all files given in argv
+    test_compute_all_pairwise_ANI_estimation_random_spaced_kmers(20, 20, argc - 1, argv + 1,"test_spaced.csv"); // test on all files given in argv
 }

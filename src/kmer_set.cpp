@@ -78,7 +78,7 @@ kmer_set kmer_set_from_fasta_file(
  * @return a list of kmer_sets corresponding to the file names given
  */
 std::vector<kmer_set> kmer_sets_from_fasta_files(
-    int num_files,
+    const int num_files,
     char *fasta_filenames[],
     const kmer_bitset &mask,
     const int window_length,
@@ -109,7 +109,7 @@ std::vector<kmer_set> kmer_sets_from_fasta_files(
  * @return a list of kmer_sets corresponding to the file names given
  */
 std::vector<kmer_set> parallel_kmer_sets_from_fasta_files(
-    int num_files,
+    const int num_files,
     char *fasta_filenames[],
     const kmer_bitset &mask,
     const int window_length,

@@ -20,15 +20,28 @@
 
 #include "logging.hpp"
 
-// We will be using the boost dynamic bitsets for representing the kmers
+/**
+ * @brief 
+ * We will be using the boost dynamic bitsets for representing the kmers
+ */
 typedef boost::dynamic_bitset<> kmer_bitset;
 
-// ONLY MODIFY THIS
-// const int LOG_KMER_UINT32_SIZE = 2;
-constexpr int LOG_KMER_BITSET_SIZE = 6; // Make this as small as is necessary, increasing it makes the program slower
-// Setting it to 6 gives 64-bit bitsets -> 32-mers, 7 -> 64-mers, 8 -> 128-mers, 9 -> 256-mers, 10 -> 512-mers
+/**
+ * @brief 
+ * Size of the kmer_bitset used throughout the code
+ * Make this as small as is necessary, increasing it makes the program slower
+ * Setting it to 6 gives 64-bit bitsets -> 32-mers, 7 -> 64-mers, 8 -> 128-mers, 9 -> 256-mers, 10 -> 512-mer
+ * 
+ * ONLY MODIFY THIS
+ */
+constexpr int LOG_KMER_BITSET_SIZE = 6;
 
-// DO NOT MODIFY THESE
+/**
+ * @brief 
+ * Other constants used in the code
+ * 
+ * DO NOT MODIFY THESE
+ */
 constexpr int NUCLEOTIDE_BIT_SIZE = 2;
 constexpr int KMER_BITSET_SIZE = (1 << LOG_KMER_BITSET_SIZE);
 constexpr int MAX_KMER_LENGTH = (KMER_BITSET_SIZE / NUCLEOTIDE_BIT_SIZE);
@@ -43,13 +56,21 @@ kmer_bitset generate_random_spaced_seed_mask(
     const int kmer_size,
     size_t random_seed = 0);
 
-// Struct to store information about the kmer
+/**
+ * @brief 
+ * Struct to store information about the kmer
+ * 
+ * @param window_length Length of the whole kmer_window
+ * @param kmer_bits Raw bits in the kmer
+ * @param mask Mask used for the kmer
+ * @param masked_bits Masked bits of the kmer, equal to kmer_bits & mask
+ */
 struct kmer
 {
-    int window_length;       // Length of the whole kmer_window
-    kmer_bitset kmer_bits;   // Raw bits in the kmer
-    kmer_bitset mask;        // Mask used for the kmer
-    kmer_bitset masked_bits; // Masked bits of the kmer
+    int window_length;       
+    kmer_bitset kmer_bits;   
+    kmer_bitset mask;        
+    kmer_bitset masked_bits; 
 
     bool operator==(const kmer &other) const
     {
@@ -74,8 +95,14 @@ void nucleotide_string_list_to_kmers_by_reference(
     const int window_length,
     const std::function<bool(const kmer)> &sketching_cond);
 
-// Struct for computing kmer hashes using std::hash
-// This is primary used in the hash map to check if an identical kmer exists
+/**
+ * @brief 
+ * Struct for computing kmer hashes using std::hash
+ * This is primarily used in the hash map to check if an identical kmer exists
+ * 
+ * @param kmer_bitset_std_hash Hash for kmer_bitsets
+ * @param int_std_hash Hash for int
+ */
 struct kmer_hash
 {
     std::hash<kmer_bitset> kmer_bitset_std_hash;
@@ -89,8 +116,15 @@ struct kmer_hash
     }
 };
 
-// Struct for FracMinHash, initialised with a nonce to create a different hash
-// This is primarily used in FracMinHash to determine which kmers are kept in the sketching process
+/**
+ * @brief 
+ * Struct for FracMinHash, initialised with a nonce to create a different hash
+ * This is primarily used in FracMinHash to determine which kmers are kept in the sketching process
+ * 
+ * @param kmer_bitset_boost_hash Hash for kmer_bitsets
+ * @param int_boost_hash Hash for int
+ * @param nonce Parameter given to generate a different hash function
+ */
 struct frac_min_hash
 {
     boost::hash<kmer_bitset> kmer_bitset_boost_hash;
@@ -140,14 +174,14 @@ kmer_set kmer_set_from_fasta_file(
     const int window_length,
     const std::function<bool(const kmer)> &sketching_cond);
 std::vector<kmer_set> kmer_sets_from_fasta_files(
-    int num_files,
+    const int num_files,
     char *fasta_filenames[],
     const kmer_bitset &mask,
     const int window_length,
     const std::function<bool(const kmer)> &sketching_cond);
 // This version processes the fasta files in parallel using OpenCilk
 std::vector<kmer_set> parallel_kmer_sets_from_fasta_files(
-    int num_files,
+    const int num_files,
     char *fasta_filenames[],
     const kmer_bitset &mask,
     const int window_length,
