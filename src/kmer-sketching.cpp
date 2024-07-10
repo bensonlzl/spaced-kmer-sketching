@@ -47,11 +47,18 @@ void write_to_csv(
     const std::vector<std::string> &filenames1,
     const std::vector<std::string> &filenames2,
     const std::vector<double> &estimated_values,
+    const int window_size,
     const kmer_bitset &mask,
-    const std::string &output_filename)
+    const std::string &output_filename,
+    bool is_append = false)
 {
     // Open the output file
-    std::ofstream output_file(output_filename);
+    std::ofstream output_file;
+    if (is_append)
+        output_file.open(output_filename, std::ios_base::app);
+    else
+        output_file.open(output_filename);
+
     if (!output_file.is_open())
     {
         std::cerr << "Error: Unable to open file " << output_filename << " for writing." << std::endl;
@@ -59,13 +66,13 @@ void write_to_csv(
     }
 
     // Write header
-    output_file << "File 1,File 2,Estimated Value,Mask" << std::endl;
+    output_file << "File 1,File 2,Estimated Value,Window Size,Mask" << std::endl;
 
     // Write data
     size_t numEntries = std::min(std::min(filenames1.size(), filenames2.size()), estimated_values.size());
     for (size_t i = 0; i < numEntries; ++i)
     {
-        output_file << filenames1[i] << "," << filenames2[i] << "," << estimated_values[i] << "," << mask << std::endl;
+        output_file << filenames1[i] << "," << filenames2[i] << "," << estimated_values[i] << "," << window_size << "," << mask << std::endl;
     }
 
     // Close the file
@@ -151,6 +158,7 @@ void test_compute_adjacent_pairwise_ANI_estimation_random_spaced_kmers(
         kmer_filenames_1,
         kmer_filenames_2,
         ani_estimate_vals,
+        window_size,
         mask,
         output_filename);
 }
@@ -172,7 +180,8 @@ void test_compute_all_pairwise_ANI_estimation_random_spaced_kmers(
     const int kmer_size,
     const int num_files,
     char *filenames[],
-    const std::string &output_filename)
+    const std::string &output_filename,
+    bool is_append = false)
 {
     // kmer_bitset mask = contiguous_kmer(kmer_size);
     kmer_bitset mask = generate_random_spaced_seed_mask(window_size, kmer_size);
@@ -213,19 +222,37 @@ void test_compute_all_pairwise_ANI_estimation_random_spaced_kmers(
         containment_vals[i] = containment(intersection_vals[i], kmer_sets_pairwise.first[i]->kmer_set_size());
         ani_estimate_vals[i] = binomial_estimator(containment_vals[i], kmer_num_indices);
     }
+
+    if (DEBUG)
+    {
+        for (int i = 0; i < data_size; ++i)
+        {
+            std::cout << "INTERSECTION = " << intersection_vals[i] << " | CONTAINMENT  = " << containment_vals[i] << " | ANI ESTIMATE = " << ani_estimate_vals[i] << std::endl;
+        }
+    }
+
     auto t_postcomparison = std::chrono::high_resolution_clock::now();
     std::cout << "Time taken for comparison = " << std::chrono::duration<double, std::milli>(t_postcomparison - t_postprocess_kmers).count() << " ms" << std::endl;
     write_to_csv(
         kmer_filenames_pairwise.first,
         kmer_filenames_pairwise.second,
         ani_estimate_vals,
+        window_size,
         mask,
-        output_filename);
+        output_filename,
+        is_append);
 }
 
 int main(int argc, char *argv[])
 {
     initialise_contiguous_kmer_array();
     initialise_reversing_kmer_array();
-    test_compute_all_pairwise_ANI_estimation_random_spaced_kmers(20, 20, argc - 1, argv + 1,"test_spaced.csv"); // test on all files given in argv
+    const std::string filename = std::string(argv[1]);//"../../data_temp/Single-Family-Cross-Genus.csv";
+    test_compute_all_pairwise_ANI_estimation_random_spaced_kmers(32, 32, argc - 2, argv + 2,filename,false); // test on all files given in argv
+    for (int k = 10; k <= 10; ++k){
+        test_compute_all_pairwise_ANI_estimation_random_spaced_kmers(k, k, argc - 2, argv + 2,filename,true); // test on all files given in argv
+    }
+    for (int k = 10; k <= 10; ++k){
+        test_compute_all_pairwise_ANI_estimation_random_spaced_kmers(k+10, k, argc - 2, argv + 2,filename,true); // test on all files given in argv
+    }
 }

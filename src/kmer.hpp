@@ -34,7 +34,14 @@ typedef boost::dynamic_bitset<> kmer_bitset;
  * 
  * ONLY MODIFY THIS
  */
-constexpr int LOG_KMER_BITSET_SIZE = 6;
+constexpr int LOG_KMER_BITSET_SIZE = 7;
+
+/**
+ * @brief 
+ * Enables parallel computation with OpenCilk
+ */
+constexpr int PARALLEL_ENABLE = 1;
+
 
 /**
  * @brief 
@@ -152,8 +159,10 @@ struct kmer_set
     // Helper function for inserting kmers
     void insert_kmers(const std::vector<kmer> &kmers)
     {
-        for (kmer k : kmers)
+        for (const kmer &k : kmers)
         {
+            if (DEBUG)
+                std::cout << "Inserting kmer " << k.masked_bits << std::endl;
             kmer_hashes[k] = 1;
         }
     }

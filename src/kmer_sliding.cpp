@@ -172,6 +172,11 @@ void nucleotide_string_to_kmers(
             masked_canonical_kmer_bits = &masked_reverse_complement_strand;
         }
 
+        // std::cout << "CANONICAL KMER " <<  *canonical_kmer_bits << '\n';
+        // std::cout << "MASK " <<  mask << '\n';
+        // std::cout << "MASKED CANONICAL KMER " <<  *masked_canonical_kmer_bits << '\n';
+        // std::cout << std::endl;
+
         kmer canon_kmer(window_length, *canonical_kmer_bits, mask, *masked_canonical_kmer_bits);
         if (sketching_cond(canon_kmer))
             kmer_list.push_back(canon_kmer);
