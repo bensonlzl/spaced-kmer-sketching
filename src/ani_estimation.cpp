@@ -12,6 +12,8 @@
 
 #include "ani_estimator.hpp"
 
+constexpr int ANI_DEBUG = DEBUG | 0;
+
 /**
  * @brief
  * Helper function to compute the containment based on the intersection size and the set size

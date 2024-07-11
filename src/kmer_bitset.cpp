@@ -10,6 +10,8 @@
  */
 #include "kmer.hpp"
 
+constexpr int KMER_BITSET_DEBUG = DEBUG | 0;
+
 /**
  * @brief
  * To save time in initialising bitsets for common operations involving a prefix of bits,

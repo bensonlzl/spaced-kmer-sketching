@@ -40,7 +40,7 @@ constexpr int LOG_KMER_BITSET_SIZE = 7;
  * @brief 
  * Enables parallel computation with OpenCilk
  */
-constexpr int PARALLEL_ENABLE = 1;
+constexpr int PARALLEL_DISABLE = DEBUG | 0;
 
 
 /**

@@ -26,7 +26,7 @@ void print_strings(const std::vector<std::string> &string_list)
 }
 
 // Sketching function, example
-frac_min_hash fmh(0);
+frac_min_hash fmh(1);
 inline bool sketching_condition(const kmer &test_kmer)
 {
     const int c = 200;
@@ -66,7 +66,8 @@ void write_to_csv(
     }
 
     // Write header
-    output_file << "File 1,File 2,Estimated Value,Window Size,Mask" << std::endl;
+    if (!is_append)
+        output_file << "File 1,File 2,Estimated Value,Window Size,Mask" << std::endl;
 
     // Write data
     size_t numEntries = std::min(std::min(filenames1.size(), filenames2.size()), estimated_values.size());
@@ -130,7 +131,7 @@ void test_compute_adjacent_pairwise_ANI_estimation_random_spaced_kmers(
         num_files,
         filenames,
         mask,
-        kmer_size,
+        window_size,
         sketching_condition);
     auto t_postprocess_kmers = std::chrono::high_resolution_clock::now();
     std::cout << "Time taken for sketching = " << std::chrono::duration<double, std::milli>(t_postprocess_kmers - t_preprocess_string).count() << " ms" << std::endl;
@@ -193,7 +194,7 @@ void test_compute_all_pairwise_ANI_estimation_random_spaced_kmers(
         num_files,
         filenames,
         mask,
-        kmer_size,
+        window_size,
         sketching_condition);
     auto t_postprocess_kmers = std::chrono::high_resolution_clock::now();
     std::cout << "Time taken for sketching = " << std::chrono::duration<double, std::milli>(t_postprocess_kmers - t_preprocess_string).count() << " ms" << std::endl;
@@ -223,13 +224,16 @@ void test_compute_all_pairwise_ANI_estimation_random_spaced_kmers(
         ani_estimate_vals[i] = binomial_estimator(containment_vals[i], kmer_num_indices);
     }
 
-    if (DEBUG)
-    {
-        for (int i = 0; i < data_size; ++i)
-        {
-            std::cout << "INTERSECTION = " << intersection_vals[i] << " | CONTAINMENT  = " << containment_vals[i] << " | ANI ESTIMATE = " << ani_estimate_vals[i] << std::endl;
-        }
-    }
+    // if (1)
+    // {
+    //     for (int i = 0; i < data_size; ++i)
+    //     {
+    //         // for (auto it : kmer_sets_pairwise.first[i]->kmer_hashes){
+    //         //     std::cout << it.first.masked_bits << '\n';
+    //         // }
+    //         std::cout << "SIZE = " << kmer_sets_pairwise.first[i]->kmer_set_size() << " | INTERSECTION = " << intersection_vals[i] << " | CONTAINMENT  = " << containment_vals[i] << " | ANI ESTIMATE = " << ani_estimate_vals[i] << std::endl;
+    //     }
+    // }
 
     auto t_postcomparison = std::chrono::high_resolution_clock::now();
     std::cout << "Time taken for comparison = " << std::chrono::duration<double, std::milli>(t_postcomparison - t_postprocess_kmers).count() << " ms" << std::endl;
@@ -248,11 +252,11 @@ int main(int argc, char *argv[])
     initialise_contiguous_kmer_array();
     initialise_reversing_kmer_array();
     const std::string filename = std::string(argv[1]);//"../../data_temp/Single-Family-Cross-Genus.csv";
-    test_compute_all_pairwise_ANI_estimation_random_spaced_kmers(32, 32, argc - 2, argv + 2,filename,false); // test on all files given in argv
-    for (int k = 10; k <= 10; ++k){
+    test_compute_all_pairwise_ANI_estimation_random_spaced_kmers(10, 10, argc - 2, argv + 2,filename,false); // test on all files given in argv
+    for (int k = 11; k <= 40; ++k){
         test_compute_all_pairwise_ANI_estimation_random_spaced_kmers(k, k, argc - 2, argv + 2,filename,true); // test on all files given in argv
     }
-    for (int k = 10; k <= 10; ++k){
+    for (int k = 10; k <= 40; ++k){
         test_compute_all_pairwise_ANI_estimation_random_spaced_kmers(k+10, k, argc - 2, argv + 2,filename,true); // test on all files given in argv
     }
 }

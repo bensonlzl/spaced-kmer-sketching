@@ -11,6 +11,8 @@
 #include "kmer.hpp"
 #include "fasta_processing.hpp"
 
+constexpr int KMER_SET_DEBUG = DEBUG | 0;
+
 /**
  * @brief
  * Helper function to compute the number of kmers in the intersection of two kmer sets
@@ -115,8 +117,8 @@ std::vector<kmer_set> parallel_kmer_sets_from_fasta_files(
     const int window_length,
     const std::function<bool(const kmer)> &sketching_cond)
 {
-    // Debug: If the PARALLEL_FILES flag is set to 0, use the serial version
-    if (!PARALLEL_ENABLE)
+    // Debug: If the PARALLEL_DISABLE flag is set to 0, use the serial version
+    if (PARALLEL_DISABLE)
         return kmer_sets_from_fasta_files(num_files, fasta_filenames, mask, window_length, sketching_cond);
 
     std::vector<kmer_set> kmer_sets(num_files);
@@ -167,7 +169,7 @@ std::vector<int> parallel_compute_pairwise_kmer_set_intersections(
     const std::vector<kmer_set *> &kmer_sets_1,
     const std::vector<kmer_set *> &kmer_sets_2)
 {
-    if (!PARALLEL_ENABLE)
+    if (PARALLEL_DISABLE)
         return compute_pairwise_kmer_set_intersections(kmer_sets_1, kmer_sets_2);
 
     if (kmer_sets_1.size() != kmer_sets_2.size())

@@ -13,6 +13,7 @@
 #include <cstdint>
 #include <iostream>
 #include <fstream>
+#include "logging.hpp"
 
 typedef std::vector<uint8_t> acgt_string;
 

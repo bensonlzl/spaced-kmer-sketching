@@ -1,5 +1,5 @@
 #ifndef LOGGING
-constexpr std::string INFO_LOG = "[INFO] ";
-constexpr int DEBUG = 0;
-constexpr int LOGGING = 0;
+#define LOGGING 0
+#define INFO_LOG "[INFO] "
+#define DEBUG 0
 #endif

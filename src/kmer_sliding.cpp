@@ -12,6 +12,8 @@
 #include "kmer.hpp"
 #include "fasta_processing.hpp"
 
+constexpr int SLIDING_DEBUG = DEBUG | 0;
+
 /**
  * @brief
  * Helper function to update the kmer window
@@ -148,9 +150,9 @@ void nucleotide_string_to_kmers(
         update_kmer_window(current_kmer_window, cur_nucleotide, window_length);
         update_complement_kmer_window(reversed_current_kmer_window, cur_nucleotide ^ 0x3, window_length);
 
-        if (DEBUG)
+        if (SLIDING_DEBUG)
             std::cout << "Current kmer            :" << current_kmer_window << std::endl;
-        if (DEBUG)
+        if (SLIDING_DEBUG)
             std::cout << "Current complement kmer :" << reversed_current_kmer_window << std::endl;
 
         // Compute the masked kmers for both the main strand and the complement strand

@@ -12,7 +12,8 @@
 
 #include "fasta_processing.hpp"
 
-#include "logging.hpp"
+
+constexpr int FASTA_DEBUG = DEBUG | 0;
 
 /**
  * @brief
