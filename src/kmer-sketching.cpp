@@ -225,10 +225,16 @@ int main(int argc, char *argv[])
         argv + 2,
         filename,false
     ); // test on all files given in argv
-    // for (int k = 11; k <= 40; ++k){
-    //     test_compute_ANI_estimation_random_spaced_kmers(k, k, argc - 2, argv + 2,filename,true); // test on all files given in argv
-    // }
-    // for (int k = 10; k <= 40; ++k){
-    //     test_compute_ANI_estimation_random_spaced_kmers(k+10, k, argc - 2, argv + 2,filename,true); // test on all files given in argv
-    // }
+    for (int k = 11; k <= 40; ++k){
+        test_compute_ANI_estimation_random_spaced_kmers(
+            compute_kmer_set_pointer_all_pairs,
+            compute_strings_all_pairs,
+            k, k, argc - 2, argv + 2,filename,true); // test on all files given in argv
+    }
+    for (int k = 10; k <= 40; ++k){
+        test_compute_ANI_estimation_random_spaced_kmers(
+            compute_kmer_set_pointer_all_pairs,
+            compute_strings_all_pairs,
+            k+10, k, argc - 2, argv + 2,filename,true); // test on all files given in argv
+    }
 }

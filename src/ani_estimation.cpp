@@ -2,7 +2,6 @@
  * @file ani_estimation.cpp
  * @author your name (you@domain.com)
  * @brief
- * @version 0.1
  * @date 2024-07-04
  *
  * This file contains functions involving ANI estimation from set intersections

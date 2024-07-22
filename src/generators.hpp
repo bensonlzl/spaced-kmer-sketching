@@ -1,3 +1,12 @@
+/**
+ * @file generators.hpp
+ * @author Benson Lin (bensonlinzl@gmail.com)
+ * @brief 
+ * @date 2024-07-15
+ * 
+ * @copyright Copyright (c) 2024
+ * 
+ */
 #include "stl_includes.hpp"
 
 /**

@@ -38,7 +38,7 @@ constexpr int LOG_KMER_BITSET_SIZE = 7;
 
 /**
  * @brief 
- * Enables parallel computation with OpenCilk
+ * Disables parallel computation with OpenCilk
  */
 constexpr int PARALLEL_DISABLE = DEBUG | 0;
 
@@ -151,12 +151,22 @@ struct frac_min_hash
 // hash table for kmers
 typedef std::unordered_map<kmer, int, kmer_hash> kmer_hash_table;
 
-// Custom struct to store the kmers in a set
+/**
+ * @brief 
+ * Custom struct to store the kmers in a set
+ * 
+ * @param kmer_hashes hash table to store the kmers
+ */
 struct kmer_set
 {
     kmer_hash_table kmer_hashes;
 
-    // Helper function for inserting kmers
+    /**
+     * @brief 
+     * Helper function for inserting kmers
+     * 
+     * @param kmers list of kmers
+     */
     void insert_kmers(const std::vector<kmer> &kmers)
     {
         for (const kmer &k : kmers)
@@ -167,7 +177,12 @@ struct kmer_set
         }
     }
 
-    // Helper function for computing the size of the kmer set
+    /**
+     * @brief 
+     * Helper function for computing the size of the kmer set
+     * 
+     * @return int 
+     */
     inline int kmer_set_size() const
     {
         return kmer_hashes.size();
