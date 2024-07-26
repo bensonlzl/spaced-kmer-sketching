@@ -1,12 +1,11 @@
 /**
  * @file kmer_set.cpp
- * @author your name (you@domain.com)
- * @brief
- * @version 0.1
- * @date 2024-07-04
- *
+ * @author Benson Lin (bensonlinzl@gmail.com)
+ * @brief 
+ * @date 2024-07-26
+ * 
  * @copyright Copyright (c) 2024
- *
+ * 
  */
 #include "kmer.hpp"
 #include "fasta_processing.hpp"
